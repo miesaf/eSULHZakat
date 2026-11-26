@@ -10,8 +10,8 @@ An innovation-competition concept for transferring zakat to asnaf (recipients) a
 the owner's project archive (https://app.dimensikini.xyz/zakat/, folder `zakat`).
 
 - History: first at `dimensikini.xyz/dkr/zakat` (mysql_* code), then the mysqli version on app.dimensikini.xyz (2020-22,
-  PHP 7.4). Ported to PHP 8.5 on 2026-11-26 (ClickUp `86d4e29py`, under `86d4e29pu`). The folder alone runs on PHP 8.5
-  through its own `.htaccess` (`SetHandler application/x-lsphp85`).
+  PHP 7.4). Ported to PHP 8.5 on 2026-11-26 (ClickUp `86d4e29py`, under `86d4e29pu`). Its own `.htaccess` pins PHP 8.5
+  (`SetHandler application/x-lsphp85`); keep the pin even though the whole archive site defaults to PHP 8.5 since 2026-11-27.
 
 ## Data
 
@@ -53,6 +53,14 @@ PHP 8.5 with mysqli and fileinfo, and a local MariaDB (the owner uses EnvKit). I
 `php -d display_errors=1 -d error_reporting=-1 -d sendmail_path=<a script that writes to a file> -S 127.0.0.1:8132 -t .`
 (the dump has real e-mail addresses: never let a test payment send real mail). The built-in server ignores `.htaccess`,
 so check the deny rules on the real host.
+
+## Status (2026-11-27)
+
+- Deployed on 2026-11-26 (PR #1, PHP 8.5.13) to the `zakat` folder. ClickUp `86d4e29py` is complete.
+- The 4 NEGERI admin accounts whose passwords were in the public repo were locked with random hashes (owner's OK).
+  Open: the owner sets new ones with `tools/set-password.php admin <code>`. Old passwords stay in git history.
+- The archive's root `.htaccess` (not in this repo) also refuses `..` requests and serves no `connectDB.php`, `config.json`,
+  `*.sql`, `*.log`, `*.md`, `error_log`, `LICENSE*` or composer/package files in any folder.
 
 ## Deploy
 
