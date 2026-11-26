@@ -18,10 +18,10 @@
 			$sql = "SELECT NAMA, NEGERI, DAERAH, PERUMAHAN, JENIS, LOG_BAYARAN FROM PERMOHONAN WHERE NO_SIRI = \"$NO_SIRI\"";
 			
 			// execute query
-			$result = mysql_query($sql) or die("SQL select statement failed");
+			$result = mysqli_query($condb, $sql) or die("SQL select statement failed");
 			
 			// iterate through all rows in result set
-			if($row = mysql_fetch_array($result))
+			if($row = mysqli_fetch_array($result))
 			{
 				// extract specific fields
 				$NAMA 			= $row["NAMA"];
@@ -33,24 +33,24 @@
 				
 				// Decode codes into string
 				$sql_display = "SELECT NEGERI FROM NEGERI WHERE KOD_NEGERI = '$NEGERI'";
-				$result_dispay = mysql_query($sql_display);
-				while($row_display = mysql_fetch_array($result_dispay)) { $DNEGERI = $row_display["NEGERI"]; }
+				$result_dispay = mysqli_query($condb, $sql_display);
+				while($row_display = mysqli_fetch_array($result_dispay)) { $DNEGERI = $row_display["NEGERI"]; }
 				
 				$sql_display = "SELECT NAMA_DAERAH FROM DAERAH WHERE KOD_DAERAH = '$DAERAH'";
-				$result_dispay = mysql_query($sql_display);
-				while($row_display = mysql_fetch_array($result_dispay)) { $DDAERAH = $row_display["NAMA_DAERAH"]; }
+				$result_dispay = mysqli_query($condb, $sql_display);
+				while($row_display = mysqli_fetch_array($result_dispay)) { $DDAERAH = $row_display["NAMA_DAERAH"]; }
 				
 				$sql_display = "SELECT NAMA_KWSN FROM PERUMAHAN WHERE KOD_KWSN = '$PERUMAHAN'";
-				$result_dispay = mysql_query($sql_display);
-				while($row_display = mysql_fetch_array($result_dispay)) { $DPERUMAHAN = $row_display["NAMA_KWSN"]; }
+				$result_dispay = mysqli_query($condb, $sql_display);
+				while($row_display = mysqli_fetch_array($result_dispay)) { $DPERUMAHAN = $row_display["NAMA_KWSN"]; }
 				
 				$sql_display = "SELECT JENIS FROM JENIS_ASNAF WHERE KOD_JENIS = '$JENIS'";
-				$result_dispay = mysql_query($sql_display);
-				while($row_display = mysql_fetch_array($result_dispay)) { $DJENIS = $row_display["JENIS"]; }
+				$result_dispay = mysqli_query($condb, $sql_display);
+				while($row_display = mysqli_fetch_array($result_dispay)) { $DJENIS = $row_display["JENIS"]; }
 				
 				$sql_choose = "SELECT EMEL FROM MUZAKKI WHERE NO_KP =\"$NO_KP\"";
-				$result_choose = mysql_query($sql_choose);
-				if($row_choose = mysql_fetch_array($result_choose))
+				$result_choose = mysqli_query($condb, $sql_choose);
+				if($row_choose = mysqli_fetch_array($result_choose))
 				{
 					$EMEL	= $row_choose['EMEL'];
 					
@@ -106,8 +106,8 @@
 			$ID_MUZAKKI		= $_SESSION["ident_ez"];
 			
 			$sql_3 = "SELECT * FROM MUZAKKI WHERE NO_KP = $ID_MUZAKKI";
-			$result_3 = mysql_query($sql_3);
-			while($row3 = mysql_fetch_array($result_3))
+			$result_3 = mysqli_query($condb, $sql_3);
+			while($row3 = mysqli_fetch_array($result_3))
 			{ 
 				$NAMA	= $row3["NAMA"];
 				$TEL	= $row3["TEL"];
@@ -180,7 +180,7 @@
 				$sql="UPDATE PERMOHONAN SET KIFAYAH_BAKI = $KIFAYAH_BAKI, KIFAYAH_KREDIT = $KIFAYAH_KREDIT, LOG_BAYARAN = \"$LOG_BAYARAN\" WHERE NO_SIRI = $NO_SIRI";
 				
 				// execute query
-				$exe_sql = mysql_query($sql);
+				$exe_sql = mysqli_query($condb, $sql);
 				
 				// confirming the record is added
 				if ($exe_sql)
@@ -198,7 +198,7 @@
 				}
 				else
 				{
-					echo "SQL insert statement failed.<br>" . mysql_error();
+					echo "SQL insert statement failed.<br>";
 					echo '<html>
 							<head>
 								<script>
@@ -349,7 +349,7 @@
 					<?php
 					if(!isset($_POST["BAYAR"]))
 					{
-						$ID = mysql_real_escape_string($_GET['ID']);
+						$ID = mysqli_real_escape_string($condb, $_GET['ID']);
 						
 						$D_BC = false;
 						
@@ -359,10 +359,10 @@
 							$sql = "SELECT * FROM PERMOHONAN WHERE NO_SIRI = $ID";
 							
 							// execute query
-							$result = mysql_query($sql) or die("SQL select statement failed");
+							$result = mysqli_query($condb, $sql) or die("SQL select statement failed");
 							
 							// iterate through all rows in result set
-							if($row = mysql_fetch_array($result))
+							if($row = mysqli_fetch_array($result))
 							{
 								// display barcode
 								$D_BC		= true;
@@ -379,20 +379,20 @@
 								$LOG_BAYARAN	= $row["LOG_BAYARAN"];
 								
 								$sql_display = "SELECT JENIS FROM JENIS_ASNAF WHERE KOD_JENIS = '$JENIS'";
-								$result_dispay = mysql_query($sql_display);
-								while($row = mysql_fetch_array($result_dispay)) { $DJENIS = $row["JENIS"]; }
+								$result_dispay = mysqli_query($condb, $sql_display);
+								while($row = mysqli_fetch_array($result_dispay)) { $DJENIS = $row["JENIS"]; }
 								
 								$sql_2 = "SELECT BANK, NO_AKAUN FROM ASNAF WHERE NO_KP = $PEMOHON";
-								$result_2 = mysql_query($sql_2);
-								while($row2 = mysql_fetch_array($result_2))
+								$result_2 = mysqli_query($condb, $sql_2);
+								while($row2 = mysqli_fetch_array($result_2))
 								{ 
 									$BANK		= $row2["BANK"];
 									$NO_AKAUN	= $row2["NO_AKAUN"];
 								}
 								
 								$sql_display = "SELECT NAMA_BANK FROM BANK WHERE KOD_BANK = '$BANK'";
-								$result_dispay = mysql_query($sql_display);
-								while($row = mysql_fetch_array($result_dispay)) { $DBANK = $row["NAMA_BANK"]; }
+								$result_dispay = mysqli_query($condb, $sql_display);
+								while($row = mysqli_fetch_array($result_dispay)) { $DBANK = $row["NAMA_BANK"]; }
 								
 								// output student information
 								echo "	<input type=\"hidden\" name=\"NO_SIRI\" value=\"$NO_SIRI\">

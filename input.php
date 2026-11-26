@@ -64,32 +64,32 @@
 			// End of Sijil ID Generator
 			
 			// Variables from pendaftaran.php
-			$NAMA			= mysql_real_escape_string($_POST['NAMA']);
-			$NO_KP			= mysql_real_escape_string($_POST['NO_KP']);
-			$KATA_LALUAN	= mysql_real_escape_string($_POST['KATA_LALUAN']);
-			$TEL			= mysql_real_escape_string($_POST['TEL']);
-			$JLN_1			= mysql_real_escape_string($_POST['JLN_1']);
-			$JLN_2			= mysql_real_escape_string($_POST['JLN_2']);
-			$POSKOD			= mysql_real_escape_string($_POST['POSKOD']);
-			$PERUMAHAN		= mysql_real_escape_string($_POST['PERUMAHAN']);
-			$BANDAR			= mysql_real_escape_string($_POST['BANDAR']);
-			$DAERAH			= mysql_real_escape_string($_POST['DAERAH']);
-			$NEGERI			= mysql_real_escape_string($_POST['NEGERI']);
-			$PENDAPATAN		= mysql_real_escape_string($_POST['PENDAPATAN']);
-			$BANK			= mysql_real_escape_string($_POST['BANK']);
-			$NO_AKAUN		= mysql_real_escape_string($_POST['NO_AKAUN']);
+			$NAMA			= mysqli_real_escape_string($condb, $_POST['NAMA']);
+			$NO_KP			= mysqli_real_escape_string($condb, $_POST['NO_KP']);
+			$KATA_LALUAN	= mysqli_real_escape_string($condb, $_POST['KATA_LALUAN']);
+			$TEL			= mysqli_real_escape_string($condb, $_POST['TEL']);
+			$JLN_1			= mysqli_real_escape_string($condb, $_POST['JLN_1']);
+			$JLN_2			= mysqli_real_escape_string($condb, $_POST['JLN_2']);
+			$POSKOD			= mysqli_real_escape_string($condb, $_POST['POSKOD']);
+			$PERUMAHAN		= mysqli_real_escape_string($condb, $_POST['PERUMAHAN']);
+			$BANDAR			= mysqli_real_escape_string($condb, $_POST['BANDAR']);
+			$DAERAH			= mysqli_real_escape_string($condb, $_POST['DAERAH']);
+			$NEGERI			= mysqli_real_escape_string($condb, $_POST['NEGERI']);
+			$PENDAPATAN		= mysqli_real_escape_string($condb, $_POST['PENDAPATAN']);
+			$BANK			= mysqli_real_escape_string($condb, $_POST['BANK']);
+			$NO_AKAUN		= mysqli_real_escape_string($condb, $_POST['NO_AKAUN']);
 			
-			$RUMAH			= mysql_real_escape_string($_POST['RUMAH']);
-			$BINI_B			= mysql_real_escape_string($_POST['BINI_B']);
-			$BINI_M			= mysql_real_escape_string($_POST['BINI_M']);
-			$DEW_B			= mysql_real_escape_string($_POST['DEW_B']);
-			$DEW_M			= mysql_real_escape_string($_POST['DEW_M']);
-			$ANAK_I			= mysql_real_escape_string($_POST['ANAK_I']);
-			$ANAK_M			= mysql_real_escape_string($_POST['ANAK_M']);
-			$ANAK_R			= mysql_real_escape_string($_POST['ANAK_R']);
-			$CACAT			= mysql_real_escape_string($_POST['CACAT']);
-			$BAYI			= mysql_real_escape_string($_POST['BAYI']);
-			$KRONIK			= mysql_real_escape_string($_POST['KRONIK']);
+			$RUMAH			= mysqli_real_escape_string($condb, $_POST['RUMAH']);
+			$BINI_B			= mysqli_real_escape_string($condb, $_POST['BINI_B']);
+			$BINI_M			= mysqli_real_escape_string($condb, $_POST['BINI_M']);
+			$DEW_B			= mysqli_real_escape_string($condb, $_POST['DEW_B']);
+			$DEW_M			= mysqli_real_escape_string($condb, $_POST['DEW_M']);
+			$ANAK_I			= mysqli_real_escape_string($condb, $_POST['ANAK_I']);
+			$ANAK_M			= mysqli_real_escape_string($condb, $_POST['ANAK_M']);
+			$ANAK_R			= mysqli_real_escape_string($condb, $_POST['ANAK_R']);
+			$CACAT			= mysqli_real_escape_string($condb, $_POST['CACAT']);
+			$BAYI			= mysqli_real_escape_string($condb, $_POST['BAYI']);
+			$KRONIK			= mysqli_real_escape_string($condb, $_POST['KRONIK']);
 			
 			// Penentuan Had Kifayah
 			$HK_RUMAH = 0;
@@ -129,7 +129,7 @@
 			$sql="INSERT INTO ASNAF (NAMA, NO_KP, KATA_LALUAN, TEL, JLN_1, JLN_2, POSKOD, PERUMAHAN, BANDAR, DAERAH, NEGERI, PENDAPATAN, JENIS, BANK, NO_AKAUN) VALUES (\"$NAMA\", $NO_KP, \"$KATA_LALUAN\", \"$TEL\", \"$JLN_1\", \"$JLN_2\", \"$POSKOD\", \"$PERUMAHAN\", \"$BANDAR\", \"$DAERAH\", \"$NEGERI\", \"$PENDAPATAN\", \"$JENIS\", \"$BANK\", \"$NO_AKAUN\");";
 			
 			// execute query
-			$exe_sql = mysql_query($sql);
+			$exe_sql = mysqli_query($condb, $sql);
 			
 			// confirming the record is added
 			if ($exe_sql)
@@ -145,7 +145,7 @@
 				$sql2="INSERT INTO PERMOHONAN (PEMOHON, NAMA, TAHUN, TARIKH_MOHON, NEGERI, DAERAH, PERUMAHAN, PENDAPATAN, JENIS, KIFAYAH_BAKI, RUMAH, BINI_B, BINI_M, DEW_B, DEW_M, ANAK_I, ANAK_R, ANAK_M, CACAT, BAYI, KRONIK) VALUES (\"$NO_KP\", \"$NAMA\", $TAHUN, \"$TARMOH\", \"$NEGERI\", \"$DAERAH\", \"$PERUMAHAN\", $PENDAPATAN, \"$JENIS\", $KIFAYAH_BAKI, $RUMAH, $BINI_B, $BINI_M, $DEW_B, $DEW_M, $ANAK_I, $ANAK_R, $ANAK_M, $CACAT, $BAYI, $KRONIK)";
 				
 				// execute query
-				$exe_sql2 = mysql_query($sql2);
+				$exe_sql2 = mysqli_query($condb, $sql2);
 				
 				// confirming the record is added
 				if($exe_sql2)
@@ -161,7 +161,7 @@
 				}
 				else
 				{
-					echo "SQL insert statement failed.<br>" . mysql_error();
+					echo "SQL insert statement failed.<br>";
 					echo '<html>
 							<head>
 								<script>
@@ -174,7 +174,7 @@
 			}
 			else
 			{
-				echo "SQL insert statement failed.<br>" . mysql_error();
+				echo "SQL insert statement failed.<br>";
 				echo '<html>
 						<head>
 							<script>
@@ -320,8 +320,8 @@
 													<option value=""> Sila pilih </option>
 													<?php
 													$sql_choose = "SELECT KOD_DAERAH, KOD_KWSN, NAMA_KWSN FROM PERUMAHAN ORDER BY NAMA_KWSN";
-													$result_choose = mysql_query($sql_choose);
-													while ($row = mysql_fetch_array($result_choose))
+													$result_choose = mysqli_query($condb, $sql_choose);
+													while ($row = mysqli_fetch_array($result_choose))
 													{
 														$KWSN1 = $row["KOD_DAERAH"];
 														$KWSN2 = $row["KOD_KWSN"];
@@ -337,8 +337,8 @@
 													<option value=""> Sila pilih </option>
 													<?php
 													$sql_choose = "SELECT KOD_NEGERI, KOD_DAERAH, NAMA_DAERAH FROM DAERAH ORDER BY NAMA_DAERAH";
-													$result_choose = mysql_query($sql_choose);
-													while ($row = mysql_fetch_array($result_choose))
+													$result_choose = mysqli_query($condb, $sql_choose);
+													while ($row = mysqli_fetch_array($result_choose))
 													{
 														$DAE1 = $row["KOD_NEGERI"];
 														$DAE2 = $row["KOD_DAERAH"];
@@ -353,8 +353,8 @@
 													<option disabled> </option>
 													<?php
 													$sql_choose = "SELECT KOD_NEGERI, NEGERI, P_ZAKAT FROM NEGERI ORDER BY P_ZAKAT";
-													$result_choose = mysql_query($sql_choose);
-													while ($row = mysql_fetch_array($result_choose))
+													$result_choose = mysqli_query($condb, $sql_choose);
+													while ($row = mysqli_fetch_array($result_choose))
 													{
 														$NEGRI1 = $row["KOD_NEGERI"];
 														$NEGRI2 = $row["NEGERI"];
@@ -425,8 +425,8 @@
 												<option disabled> </option>
 												<?php
 												$sql_choose = "SELECT * FROM BANK ORDER BY NAMA_BANK";
-												$result_choose = mysql_query($sql_choose);
-												while ($row = mysql_fetch_array($result_choose))
+												$result_choose = mysqli_query($condb, $sql_choose);
+												while ($row = mysqli_fetch_array($result_choose))
 												{
 													$BANK1 = $row["KOD_BANK"];
 													$BANK2 = $row["NAMA_BANK"];

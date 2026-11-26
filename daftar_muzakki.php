@@ -9,17 +9,17 @@
 			$JLN_2		= null;
 			
 			// Variables from pendaftaran.php
-			$NAMA		= mysql_real_escape_string($_POST['NAMA']);
-			$NO_KP		= mysql_real_escape_string($_POST['NO_KP']);
-			$KATA_LALUAN= mysql_real_escape_string($_POST['KATA_LALUAN']);
-			$TEL		= mysql_real_escape_string($_POST['TEL']);
-			$EMEL		= mysql_real_escape_string($_POST['EMEL']);
+			$NAMA		= mysqli_real_escape_string($condb, $_POST['NAMA']);
+			$NO_KP		= mysqli_real_escape_string($condb, $_POST['NO_KP']);
+			$KATA_LALUAN= mysqli_real_escape_string($condb, $_POST['KATA_LALUAN']);
+			$TEL		= mysqli_real_escape_string($condb, $_POST['TEL']);
+			$EMEL		= mysqli_real_escape_string($condb, $_POST['EMEL']);
 			
 			//SQL query command
 			$sql="INSERT INTO MUZAKKI (NAMA, NO_KP, KATA_LALUAN, TEL, EMEL) VALUES (\"$NAMA\", $NO_KP, \"$KATA_LALUAN\", \"$TEL\", \"$EMEL\")";
 			
 			// execute query
-			$exe_sql = mysql_query($sql);
+			$exe_sql = mysqli_query($condb, $sql);
 			
 			// confirming the record is added
 			if ($exe_sql)
@@ -35,7 +35,7 @@
 			}
 			else
 			{
-				echo "SQL insert statement failed.<br>" . mysql_error();
+				echo "SQL insert statement failed.<br>";
 				echo '<html>
 						<head>
 							<script>

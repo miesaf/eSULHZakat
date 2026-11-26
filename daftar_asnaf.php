@@ -9,27 +9,27 @@
 			$JLN_2		= null;
 			
 			// Variables from pendaftaran.php
-			$NAMA		= mysql_real_escape_string($_POST['NAMA']);
-			$NO_KP		= mysql_real_escape_string($_POST['NO_KP']);
-			$KATA_LALUAN= mysql_real_escape_string($_POST['KATA_LALUAN']);
-			$TEL		= mysql_real_escape_string($_POST['TEL']);
-			$JLN_1		= mysql_real_escape_string($_POST['JLN_1']);
-			$JLN_2		= mysql_real_escape_string($_POST['JLN_2']);
-			$POSKOD		= mysql_real_escape_string($_POST['POSKOD']);
-			$PERUMAHAN	= mysql_real_escape_string($_POST['PERUMAHAN']);
-			$BANDAR		= mysql_real_escape_string($_POST['BANDAR']);
-			$DAERAH		= mysql_real_escape_string($_POST['DAERAH']);
-			$NEGERI		= mysql_real_escape_string($_POST['NEGERI']);
-			$PENDAPATAN	= mysql_real_escape_string($_POST['PENDAPATAN']);
-			$JENIS		= mysql_real_escape_string($_POST['JENIS']);
-			$BANK		= mysql_real_escape_string($_POST['BANK']);
-			$NO_AKAUN	= mysql_real_escape_string($_POST['NO_AKAUN']);
+			$NAMA		= mysqli_real_escape_string($condb, $_POST['NAMA']);
+			$NO_KP		= mysqli_real_escape_string($condb, $_POST['NO_KP']);
+			$KATA_LALUAN= mysqli_real_escape_string($condb, $_POST['KATA_LALUAN']);
+			$TEL		= mysqli_real_escape_string($condb, $_POST['TEL']);
+			$JLN_1		= mysqli_real_escape_string($condb, $_POST['JLN_1']);
+			$JLN_2		= mysqli_real_escape_string($condb, $_POST['JLN_2']);
+			$POSKOD		= mysqli_real_escape_string($condb, $_POST['POSKOD']);
+			$PERUMAHAN	= mysqli_real_escape_string($condb, $_POST['PERUMAHAN']);
+			$BANDAR		= mysqli_real_escape_string($condb, $_POST['BANDAR']);
+			$DAERAH		= mysqli_real_escape_string($condb, $_POST['DAERAH']);
+			$NEGERI		= mysqli_real_escape_string($condb, $_POST['NEGERI']);
+			$PENDAPATAN	= mysqli_real_escape_string($condb, $_POST['PENDAPATAN']);
+			$JENIS		= mysqli_real_escape_string($condb, $_POST['JENIS']);
+			$BANK		= mysqli_real_escape_string($condb, $_POST['BANK']);
+			$NO_AKAUN	= mysqli_real_escape_string($condb, $_POST['NO_AKAUN']);
 			
 			//SQL query command
 			$sql="INSERT INTO ASNAF (NAMA, NO_KP, KATA_LALUAN, TEL, JLN_1, JLN_2, POSKOD, PERUMAHAN, BANDAR, DAERAH, NEGERI, PENDAPATAN, JENIS, BANK, NO_AKAUN) VALUES (\"$NAMA\", $NO_KP, \"$KATA_LALUAN\", \"$TEL\", \"$JLN_1\", \"$JLN_2\", \"$POSKOD\", \"$PERUMAHAN\", \"$BANDAR\", \"$DAERAH\", \"$NEGERI\", \"$PENDAPATAN\", \"$JENIS\", \"$BANK\", \"$NO_AKAUN\")";
 			
 			// execute query
-			$exe_sql = mysql_query($sql);
+			$exe_sql = mysqli_query($condb, $sql);
 			
 			// confirming the record is added
 			if ($exe_sql)
@@ -45,7 +45,7 @@
 			}
 			else
 			{
-				echo "SQL insert statement failed.<br>" . mysql_error();
+				echo "SQL insert statement failed.<br>";
 				echo '<html>
 						<head>
 							<script>
@@ -192,8 +192,8 @@
 													<option disabled> </option>
 													<?php
 													$sql_choose = "SELECT * FROM PERUMAHAN ORDER BY KOD_DAERAH, NAMA_KWSN";
-													$result_choose = mysql_query($sql_choose);
-													while ($row = mysql_fetch_array($result_choose))
+													$result_choose = mysqli_query($condb, $sql_choose);
+													while ($row = mysqli_fetch_array($result_choose))
 													{
 														$KWSN1 = $row["KOD_KWSN"];
 														$KWSN2 = $row["NAMA_KWSN"];
@@ -208,8 +208,8 @@
 													<option disabled> </option>
 													<?php
 													$sql_choose = "SELECT * FROM DAERAH ORDER BY KOD_NEGERI, NAMA_DAERAH";
-													$result_choose = mysql_query($sql_choose);
-													while ($row = mysql_fetch_array($result_choose))
+													$result_choose = mysqli_query($condb, $sql_choose);
+													while ($row = mysqli_fetch_array($result_choose))
 													{
 														$DAERAH1 = $row["KOD_DAERAH"];
 														$DAERAH2 = $row["NAMA_DAERAH"];
@@ -222,8 +222,8 @@
 													<option disabled> </option>
 													<?php
 													$sql_choose = "SELECT * FROM NEGERI ORDER BY NEGERI";
-													$result_choose = mysql_query($sql_choose);
-													while ($row = mysql_fetch_array($result_choose))
+													$result_choose = mysqli_query($condb, $sql_choose);
+													while ($row = mysqli_fetch_array($result_choose))
 													{
 														$NEGERI1 = $row["KOD_NEGERI"];
 														$NEGERI2 = $row["NEGERI"];
@@ -243,8 +243,8 @@
 												<option disabled> </option>
 												<?php
 												$sql_choose = "SELECT * FROM JENIS_ASNAF ORDER BY JENIS";
-												$result_choose = mysql_query($sql_choose);
-												while ($row = mysql_fetch_array($result_choose))
+												$result_choose = mysqli_query($condb, $sql_choose);
+												while ($row = mysqli_fetch_array($result_choose))
 												{
 													$JENIS1 = $row["KOD_JENIS"];
 													$JENIS2 = $row["JENIS"];
@@ -259,8 +259,8 @@
 												<option disabled> </option>
 												<?php
 												$sql_choose = "SELECT * FROM BANK ORDER BY NAMA_BANK";
-												$result_choose = mysql_query($sql_choose);
-												while ($row = mysql_fetch_array($result_choose))
+												$result_choose = mysqli_query($condb, $sql_choose);
+												while ($row = mysqli_fetch_array($result_choose))
 												{
 													$BANK1 = $row["KOD_BANK"];
 													$BANK2 = $row["NAMA_BANK"];

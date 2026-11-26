@@ -15,7 +15,7 @@
 </head>
 <body onload="window.print()">
 	<?php
-	$ID = mysql_real_escape_string($_GET['ID']);
+	$ID = mysqli_real_escape_string($condb, $_GET['ID']);
 	
 	$D_BC = false;
 	
@@ -25,10 +25,10 @@
 		$sql = "SELECT * FROM PERMOHONAN WHERE NO_SIRI = $ID";
 		
 		// execute query
-		$result = mysql_query($sql) or die("SQL select statement failed");
+		$result = mysqli_query($condb, $sql) or die("SQL select statement failed");
 		
 		// iterate through all rows in result set
-		if($row = mysql_fetch_array($result))
+		if($row = mysqli_fetch_array($result))
 		{
 			// display barcode
 			$D_BC		= true;
@@ -62,20 +62,20 @@
 			
 			// Decode codes into string
 			$sql_display = "SELECT NEGERI FROM NEGERI WHERE KOD_NEGERI = '$NEGERI'";
-			$result_dispay = mysql_query($sql_display);
-			while($row = mysql_fetch_array($result_dispay)) { $DNEGERI = $row["NEGERI"]; }
+			$result_dispay = mysqli_query($condb, $sql_display);
+			while($row = mysqli_fetch_array($result_dispay)) { $DNEGERI = $row["NEGERI"]; }
 			
 			$sql_display = "SELECT NAMA_DAERAH FROM DAERAH WHERE KOD_DAERAH = '$DAERAH'";
-			$result_dispay = mysql_query($sql_display);
-			while($row = mysql_fetch_array($result_dispay)) { $DDAERAH = $row["NAMA_DAERAH"]; }
+			$result_dispay = mysqli_query($condb, $sql_display);
+			while($row = mysqli_fetch_array($result_dispay)) { $DDAERAH = $row["NAMA_DAERAH"]; }
 			
 			$sql_display = "SELECT NAMA_KWSN FROM PERUMAHAN WHERE KOD_KWSN = '$PERUMAHAN'";
-			$result_dispay = mysql_query($sql_display);
-			while($row = mysql_fetch_array($result_dispay)) { $DPERUMAHAN = $row["NAMA_KWSN"]; }
+			$result_dispay = mysqli_query($condb, $sql_display);
+			while($row = mysqli_fetch_array($result_dispay)) { $DPERUMAHAN = $row["NAMA_KWSN"]; }
 			
 			$sql_display = "SELECT JENIS FROM JENIS_ASNAF WHERE KOD_JENIS = '$JENIS'";
-			$result_dispay = mysql_query($sql_display);
-			while($row = mysql_fetch_array($result_dispay)) { $DJENIS = $row["JENIS"]; }
+			$result_dispay = mysqli_query($condb, $sql_display);
+			while($row = mysqli_fetch_array($result_dispay)) { $DJENIS = $row["JENIS"]; }
 			
 			if($RUMAH == 1)
 			{

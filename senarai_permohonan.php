@@ -140,8 +140,8 @@
 										<option disabled> </option>
 										<?php
 										$sql_choose = "SELECT KOD_NEGERI, NEGERI, P_ZAKAT FROM NEGERI ORDER BY P_ZAKAT";
-										$result_choose = mysql_query($sql_choose);
-										while ($row = mysql_fetch_array($result_choose))
+										$result_choose = mysqli_query($condb, $sql_choose);
+										while ($row = mysqli_fetch_array($result_choose))
 										{
 											$NEGRI1 = $row["KOD_NEGERI"];
 											$NEGRI2 = $row["NEGERI"];
@@ -176,8 +176,8 @@
 										<option value=""> Sila pilih </option>
 										<?php
 										$sql_choose = "SELECT KOD_NEGERI, KOD_DAERAH, NAMA_DAERAH FROM DAERAH ORDER BY NAMA_DAERAH";
-										$result_choose = mysql_query($sql_choose);
-										while ($row = mysql_fetch_array($result_choose))
+										$result_choose = mysqli_query($condb, $sql_choose);
+										while ($row = mysqli_fetch_array($result_choose))
 										{
 											$DAE1 = $row["KOD_NEGERI"];
 											$DAE2 = $row["KOD_DAERAH"];
@@ -206,8 +206,8 @@
 										<option value=""> Sila pilih </option>
 										<?php
 										$sql_choose = "SELECT KOD_DAERAH, KOD_KWSN, NAMA_KWSN FROM PERUMAHAN ORDER BY NAMA_KWSN";
-										$result_choose = mysql_query($sql_choose);
-										while ($row = mysql_fetch_array($result_choose))
+										$result_choose = mysqli_query($condb, $sql_choose);
+										while ($row = mysqli_fetch_array($result_choose))
 										{
 											$KWSN1 = $row["KOD_DAERAH"];
 											$KWSN2 = $row["KOD_KWSN"];
@@ -244,7 +244,7 @@
                             // SELECT * FROM PERMOHONAN WHERE NEGERI = "SLGR" AND DAERAH = "KLNG" AND PERUMAHAN = "KLG1" ORDER BY JENIS, (SELECT NAMA FROM ASNAF WHERE NO_KP = "880101014591")
 							
                             // execute listing query
-                            $result = mysql_query($sql) or die("SQL select statement failed");
+                            $result = mysqli_query($condb, $sql) or die("SQL select statement failed");
                         }
                     ?>
                 </div>
@@ -280,8 +280,8 @@
                                 
                                 // Display kompeni name array
                                 $sql_jns	= "SELECT * FROM JENIS_ASNAF";
-                                $result_jns	= mysql_query($sql_jns);
-                                while($row_jns	= mysql_fetch_array($result_jns))
+                                $result_jns	= mysqli_query($condb, $sql_jns);
+                                while($row_jns	= mysqli_fetch_array($result_jns))
                                 {
                                     $JNS1			= $row_jns["KOD_JENIS"];
                                     $JNS2			= $row_jns["JENIS"];
@@ -289,7 +289,7 @@
                                 }
                                 
                                 // iterate through all rows in result set
-                                while ($row = mysql_fetch_array($result))
+                                while ($row = mysqli_fetch_array($result))
                                 {
                                     $BIL++;
                                     

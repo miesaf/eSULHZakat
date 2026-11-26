@@ -123,10 +123,10 @@
 		$sql = "SELECT NO_ID, NAMA, JENIS FROM J_ADMIN WHERE NO_ID = $ID";
 		
 		// execute query
-		$result = mysql_query($sql) or die("SQL select statement failed");
+		$result = mysqli_query($condb, $sql) or die("SQL select statement failed");
 		
 		// iterate through all rows in result set
-		$row = mysql_fetch_array($result);
+		$row = mysqli_fetch_array($result);
 	
 		// extract specific fields
 		$NO_ID		= $row["NO_ID"];
@@ -177,10 +177,10 @@
 			$sql = "SELECT NO_KP, NAMA, TEL, EMEL FROM MUZAKKI WHERE NO_KP = $ID";
 			
 			// execute query
-			$result = mysql_query($sql) or die("SQL select statement failed");
+			$result = mysqli_query($condb, $sql) or die("SQL select statement failed");
 			
 			// iterate through all rows in result set
-			$row = mysql_fetch_array($result);
+			$row = mysqli_fetch_array($result);
 		
 			// extract specific fields
 			$NO_KP	= $row["NO_KP"];
@@ -234,10 +234,10 @@
 			$sql = "SELECT * FROM J_KOMANDER WHERE NO_MATRIK = $ID";
 			
 			// execute query
-			$result = mysql_query($sql) or die("SQL select statement failed");
+			$result = mysqli_query($condb, $sql) or die("SQL select statement failed");
 			
 			// iterate through all rows in result set
-			$row = mysql_fetch_array($result);
+			$row = mysqli_fetch_array($result);
 		
 			// extract specific fields
 			$NO_MATRIK	= $row["NO_MATRIK"];
@@ -285,8 +285,8 @@
 										<tr>
 											<?php
 												$sql_display = "SELECT BATCH FROM J_BATCH WHERE ID_BATCH = '$BATCH'";
-												$result_dispay = mysql_query($sql_display);
-												while($row = mysql_fetch_array($result_dispay)) { $DBATCH = $row["BATCH"]; } 
+												$result_dispay = mysqli_query($condb, $sql_display);
+												while($row = mysqli_fetch_array($result_dispay)) { $DBATCH = $row["BATCH"]; } 
 											?>
 											<td valign="center"><div align="center"><b>Batch</b></div></td>
 											<td valign="center"><?php print($DBATCH); ?></td>
@@ -294,8 +294,8 @@
 										<tr>
 											<?php
 												$sql_display = "SELECT PANGKAT FROM J_PANGKAT WHERE ID_PANGKAT = '$PANGKAT'";
-												$result_dispay = mysql_query($sql_display);
-												while($row = mysql_fetch_array($result_dispay)) { $DPANGKAT = $row["PANGKAT"]; } 
+												$result_dispay = mysqli_query($condb, $sql_display);
+												while($row = mysqli_fetch_array($result_dispay)) { $DPANGKAT = $row["PANGKAT"]; } 
 											?>
 											<td valign="center"><div align="center"><b>Pangkat</b></div></td>
 											<td valign="center"><?php print($DPANGKAT); ?></td>
@@ -307,8 +307,8 @@
 										<tr>
 											<?php
 												$sql_display = "SELECT KOMPENI FROM J_KOMPENI WHERE ID_KOMPENI = '$KOMPENI'";
-												$result_dispay = mysql_query($sql_display);
-												while($row = mysql_fetch_array($result_dispay)) { $DKOMPENI = $row["KOMPENI"]; } 
+												$result_dispay = mysqli_query($condb, $sql_display);
+												while($row = mysqli_fetch_array($result_dispay)) { $DKOMPENI = $row["KOMPENI"]; } 
 											?>
 											<td valign="center"><div align="center"><b>Kompeni</b></div></td>
 											<td valign="center"><?php print($DKOMPENI); ?></td>
@@ -316,8 +316,8 @@
 										<tr>
 											<?php
 												$sql_display = "SELECT BIRO FROM J_BIRO WHERE ID_BIRO = '$BIRO'";
-												$result_dispay = mysql_query($sql_display);
-												while($row = mysql_fetch_array($result_dispay)) { $DBIRO = $row["BIRO"]; } 
+												$result_dispay = mysqli_query($condb, $sql_display);
+												while($row = mysqli_fetch_array($result_dispay)) { $DBIRO = $row["BIRO"]; } 
 											?>
 											<td valign="center"><div align="center"><b>Biro</b></div></td>
 											<td valign="center"><?php print($DBIRO); ?></td>
