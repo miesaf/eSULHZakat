@@ -1,11 +1,8 @@
 <?php
 	session_start();
-	
-	unset($_SESSION['login_ez']);
-	unset($_SESSION['ident_ez']);
-	unset($_SESSION['priv_ez']);
-	unset($_SESSION['name_ez']);
-	// session_destroy();
+
+	unset($_SESSION['zakat_login'], $_SESSION['zakat_ident'], $_SESSION['zakat_priv'], $_SESSION['zakat_nama']);
+	session_regenerate_id(true);
 ?>
 <html>
 <head>
@@ -14,12 +11,8 @@
 	<script>
 		window.alert("Anda telah mendaftar keluar dari sistem!\nTerima kasih kerana menggunakan sistem ini.");
 	</script>
-	<?php
-		//$name = $_GET['name'];
-	?>
 </head>
 <body>
-		<!--<h1> Goodbye</h1>-->
 		<meta http-equiv="refresh" content="0; url=index.php" />
 </body>
 </html>

@@ -1,0 +1,5 @@
+config.php
+error_log
+bukti/*
+!bukti/.gitkeep
+!bukti/.htaccess

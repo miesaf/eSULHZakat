@@ -1,49 +1,37 @@
+<?php ob_start(); ?>
 <html>
 <head>
 	<?php
-		include('connectDB.php');
+		require_once __DIR__ . '/connectDB.php';
 		
 		if(isset($_POST['DAFTAR']))
 		{
-			// Declaring null value for optional variables
-			$JLN_2		= null;
+			$NAMA		= request_text($_POST, 'NAMA');
+			$NO_KP		= request_ic($_POST, 'NO_KP');
+			$KATA_LALUAN= is_string($_POST['KATA_LALUAN'] ?? null) ? $_POST['KATA_LALUAN'] : '';
+			$TEL		= request_text($_POST, 'TEL');
+			$EMEL		= request_text($_POST, 'EMEL');
 			
-			// Variables from pendaftaran.php
-			$NAMA		= mysql_real_escape_string($_POST['NAMA']);
-			$NO_KP		= mysql_real_escape_string($_POST['NO_KP']);
-			$KATA_LALUAN= mysql_real_escape_string($_POST['KATA_LALUAN']);
-			$TEL		= mysql_real_escape_string($_POST['TEL']);
-			$EMEL		= mysql_real_escape_string($_POST['EMEL']);
-			
-			//SQL query command
-			$sql="INSERT INTO MUZAKKI (NAMA, NO_KP, KATA_LALUAN, TEL, EMEL) VALUES (\"$NAMA\", $NO_KP, \"$KATA_LALUAN\", \"$TEL\", \"$EMEL\")";
-			
-			// execute query
-			$exe_sql = mysql_query($sql);
-			
-			// confirming the record is added
-			if ($exe_sql)
+			if($NAMA === '' || $NO_KP === null || $KATA_LALUAN === '')
 			{
-				echo '<html>
-						<head>
-							<script>
-								window.alert("Pendaftaran berjaya!\nRekod telah di simpan ke dalam pangkalan data.");
-							</script>
-							<meta http-equiv="refresh" content="0; url=index.php" />
-						</head>
-					</html>';
+				js_alert("Pendaftaran gagal!\nSila isi nama, nombor K/P (12 digit tanpa sengkang) dan kata laluan.");
+			}
+			elseif($EMEL !== '' && !filter_var($EMEL, FILTER_VALIDATE_EMAIL))
+			{
+				js_alert("Pendaftaran gagal!\nAlamat e-mel tidak sah.");
+			}
+			elseif(db_value("SELECT COUNT(*) FROM MUZAKKI WHERE NO_KP = ?", [$NO_KP]) !== "0")
+			{
+				js_alert("Pendaftaran gagal!\nNombor K/P ini telah didaftarkan.");
+			}
+			elseif(db_query("INSERT INTO MUZAKKI (NAMA, NO_KP, KATA_LALUAN, TEL, EMEL) VALUES (?, ?, ?, ?, ?)",
+				[$NAMA, $NO_KP, password_hash($KATA_LALUAN, PASSWORD_DEFAULT), $TEL, $EMEL]))
+			{
+				js_alert("Pendaftaran berjaya!\nRekod telah di simpan ke dalam pangkalan data.", "index.php");
 			}
 			else
 			{
-				echo "SQL insert statement failed.<br>" . mysql_error();
-				echo '<html>
-						<head>
-							<script>
-								window.alert("Pendaftaran gagal!\nRekod tidak di simpan ke dalam pangkalan data");
-								window.history.go(-1);
-							</script>
-						</head>
-					</html>';
+				js_alert("Pendaftaran gagal!\nRekod tidak di simpan ke dalam pangkalan data");
 			}
 		}
 	?>

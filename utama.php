@@ -1,3 +1,4 @@
+<?php ob_start(); ?>
 <html lang="ms-my">
 <head>
 	<meta name="keywords" content="ezakat" />
@@ -5,14 +6,9 @@
 	<meta name="description" content="E-Asnaf Transfer" />
 	<?php
 		session_start();
-		if(!$_SESSION['login_ez'])
-		{
-			header("Location: index.php?ralat=luput");
-			exit;
-		}
-		$name = $_SESSION['name_ez'];
-		
-		include('connectDB.php');
+		require_once __DIR__ . '/connectDB.php';
+		require_login();
+		$name	= $_SESSION['zakat_nama'];
 	?>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -75,9 +71,7 @@
 
             <ul class="nav navbar-top-links navbar-right">
 				<li class="dropdown">
-					<?php if($_SESSION['priv_ez'] == "ADMN") { print ("Admin "); }
-					else if ($_SESSION['priv_ez'] == "MZKI") { print ("Muzakki | "); }
-					else if ($_SESSION['priv_ez'] == "ASNF") { print ("Asnaf | "); } ?><strong><?php print($name); ?></strong>
+					<?php echo e(account_label()); ?><strong><?php echo e($name); ?></strong>
 				</li>				
 				<li class="dropdown">
 					<a href="logout.php">
@@ -92,7 +86,7 @@
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
 						<?php
-							include('nav.php');
+							include __DIR__ . '/nav.php';
 						?>
                     </ul>
                 </div>
@@ -106,33 +100,22 @@
 			<div class="row">
 				<div class="col-lg-12">
 					<h1 class="page-header">E-Asnaf Transfer</h1>
-				<div>
+				</div>
 				<!-- /.col-lg-10 -->
 			</div>
 			<!-- /.row -->
 			<div class="row">
 				<div class="col-lg-8">
 <?php
-	// ##### ADMN ##### ADMN ##### ADMN ############################################################################ ADMN #####
-	if($_SESSION['priv_ez'] == "ADMN")
-	{
-		include('connectDB.php');
+	$priv	= $_SESSION['zakat_priv'] ?? '';
+	$ID		= $_SESSION['zakat_ident'] ?? '';
 
-		// create the query
-		$ID = $_SESSION['ident'];
-		$sql = "SELECT NO_ID, NAMA, JENIS FROM J_ADMIN WHERE NO_ID = $ID";
-		
-		// execute query
-		$result = mysql_query($sql) or die("SQL select statement failed");
-		
-		// iterate through all rows in result set
-		$row = mysql_fetch_array($result);
-	
-		// extract specific fields
-		$NO_ID		= $row["NO_ID"];
-		$NAMA 		= $row["NAMA"];
-		$JENIS		= $row["JENIS"];
-		
+	// ##### ADMN ##### ADMN ##### ADMN ############################################################################ ADMN #####
+	// A state zakat body (table NEGERI).
+	if($priv == "ADMN")
+	{
+		$result	= db_query("SELECT KOD_NEGERI, NEGERI, P_ZAKAT FROM NEGERI WHERE KOD_NEGERI = ?", [$ID]);
+		$row	= $result ? mysqli_fetch_assoc($result) : null;
 		?>
 					<div class="panel panel-default">
 						<div class="panel-heading">
@@ -148,12 +131,16 @@
 									</thead>
 									<tbody>
 										<tr>
-										  <td valign="center" ><div align="center"><b>Nombor ID</b></div></td>
-										  <td valign="center" ><?php print($NO_ID); ?></td>
+										  <td valign="center" ><div align="center"><b>Kod Negeri</b></div></td>
+										  <td valign="center" ><?php echo e($row['KOD_NEGERI'] ?? ''); ?></td>
 										</tr>
 										<tr>
 										  <td valign="center" ><div align="center"><b>Nama</b></div></td>
-										  <td valign="center" ><div align="left"><?php print($NAMA); ?></div></td>
+										  <td valign="center" ><div align="left"><?php echo e($row['P_ZAKAT'] ?? ''); ?></div></td>
+										</tr>
+										<tr>
+										  <td valign="center" ><div align="center"><b>Negeri</b></div></td>
+										  <td valign="center" ><div align="left"><?php echo e($row['NEGERI'] ?? ''); ?></div></td>
 										</tr>
 										<tr>
 										  <td valign="center"><div align="center"><b>Jenis Akaun</b></div></td>
@@ -166,28 +153,12 @@
 					</div>
 			<?php
 		}
-		
-		// ##### MZKI ##### MZKI ##### MZKI ############################################################################ MZKI #####
-		if($_SESSION['priv_ez'] == "MZKI")
-		{
-			include('connectDB.php');
 
-			// create the query
-			$ID = $_SESSION['ident_ez'];
-			$sql = "SELECT NO_KP, NAMA, TEL, EMEL FROM MUZAKKI WHERE NO_KP = $ID";
-			
-			// execute query
-			$result = mysql_query($sql) or die("SQL select statement failed");
-			
-			// iterate through all rows in result set
-			$row = mysql_fetch_array($result);
-		
-			// extract specific fields
-			$NO_KP	= $row["NO_KP"];
-			$NAMA 	= $row["NAMA"];
-			$TEL	= $row["TEL"];
-			$EMEL	= $row["EMEL"];
-			
+		// ##### MZKI ##### MZKI ##### MZKI ############################################################################ MZKI #####
+		if($priv == "MZKI")
+		{
+			$result	= db_query("SELECT NO_KP, NAMA, TEL, EMEL FROM MUZAKKI WHERE NO_KP = ?", [$ID]);
+			$row	= $result ? mysqli_fetch_assoc($result) : null;
 			?>
 					<div class="panel panel-default">
 						<div class="panel-heading">
@@ -196,22 +167,22 @@
 						<div class="panel-body">
 							<div class="table-responsive">
 								<table class="table table-striped table-bordered table-hover">
-									</tbody>
+									<tbody>
 										<tr>
 											<td valign="center" ><div align="center"><b>Nombor K/P</b></div></td>
-											<td valign="center" ><?php print($NO_KP); ?></td>
+											<td valign="center" ><?php echo e($row['NO_KP'] ?? ''); ?></td>
 										</tr>
 										<tr>
 											<td valign="center" ><div align="center"><b>Nama</b></div></td>
-											<td valign="center" ><div align="left"><?php print($NAMA); ?></div></td>
+											<td valign="center" ><div align="left"><?php echo e($row['NAMA'] ?? ''); ?></div></td>
 										</tr>
 										<tr>
 											<td valign="center" ><div align="center"><b>No. Telefon</b></div></td>
-											<td valign="center" ><div align="left"><?php print($TEL); ?></div></td>
+											<td valign="center" ><div align="left"><?php echo e($row['TEL'] ?? ''); ?></div></td>
 										</tr>
 										<tr>
 											<td valign="center" ><div align="center"><b>E-Mel</b></div></td>
-											<td valign="center" ><div align="left"><?php print($EMEL); ?></div></td>
+											<td valign="center" ><div align="left"><?php echo e($row['EMEL'] ?? ''); ?></div></td>
 										</tr>
 										<tr>
 											<td valign="center"><div align="center"><b>Jenis Akaun</b></div></td>
@@ -225,41 +196,31 @@
 			<?php
 		}
 		// ##### ASNF ##### ASNF ##### ASNF ############################################################################ ASNF #####
-		if($_SESSION['priv_ez'] == "ASNF")
+		if($priv == "ASNF")
 		{
-			include('connectDB.php');
-
-			// create the query
-			$ID = $_SESSION['ident'];
-			$sql = "SELECT * FROM J_KOMANDER WHERE NO_MATRIK = $ID";
-			
-			// execute query
-			$result = mysql_query($sql) or die("SQL select statement failed");
-			
-			// iterate through all rows in result set
-			$row = mysql_fetch_array($result);
-		
-			// extract specific fields
-			$NO_MATRIK	= $row["NO_MATRIK"];
-			$NO_BADAN	= $row["NO_BADAN"];
-			$BATCH 		= $row["BATCH"];
-			$PANGKAT	= $row["PANGKAT"];
-			$NAMA 		= $row["NAMA"];
-			$KOMPENI 	= $row["KOMPENI"];
-			$BIRO		= $row["BIRO"];
-			$TEL1		= $row["TEL1"];
-			$EMEL1		= $row["EMEL1"];
-			$STATUS		= $row["STATUS"];
-			$VALIDASI	= $row["VALIDASI"];
-			
-			// Warna Status
-			$WARNA	= null;
-			if($STATUS == "Aktif")
-			{	$WARNA = "#2eb82e";	}
-			elseif(($STATUS == "Tidak Aktif") || ($STATUS == "Digantung (Halted)") || ($STATUS == "Dikeluarkan (Expeled)") || ($STATUS == "Direhatkan (Rest)") || ($STATUS == "Terkeluar (Quit)"))
-			{	$WARNA = "red";	}
-			elseif($STATUS == "Mantan")
-			{	$WARNA = "#ff9900";	}
+			$result	= db_query("SELECT A.NO_KP, A.NAMA, A.TEL, A.JLN_1, A.JLN_2, A.POSKOD, A.BANDAR, P.NAMA_KWSN, D.NAMA_DAERAH, N.NEGERI, J.JENIS, B.NAMA_BANK, A.NO_AKAUN
+				FROM ASNAF A
+				LEFT JOIN PERUMAHAN P ON P.KOD_KWSN = A.PERUMAHAN
+				LEFT JOIN DAERAH D ON D.KOD_DAERAH = A.DAERAH
+				LEFT JOIN NEGERI N ON N.KOD_NEGERI = A.NEGERI
+				LEFT JOIN JENIS_ASNAF J ON J.KOD_JENIS = A.JENIS
+				LEFT JOIN BANK B ON B.KOD_BANK = A.BANK
+				WHERE A.NO_KP = ?", [$ID]);
+			$row	= $result ? mysqli_fetch_assoc($result) : null;
+			$fields	= [
+				'Nombor K/P'		=> $row['NO_KP'] ?? '',
+				'Nama'				=> $row['NAMA'] ?? '',
+				'No. Telefon'		=> $row['TEL'] ?? '',
+				'Alamat'			=> trim(($row['JLN_1'] ?? '') . ', ' . ($row['JLN_2'] ?? ''), ', '),
+				'Poskod'			=> $row['POSKOD'] ?? '',
+				'Kawasan Perumahan'	=> $row['NAMA_KWSN'] ?? '',
+				'Bandar'			=> $row['BANDAR'] ?? '',
+				'Daerah'			=> $row['NAMA_DAERAH'] ?? '',
+				'Negeri'			=> $row['NEGERI'] ?? '',
+				'Jenis Asnaf'		=> $row['JENIS'] ?? '',
+				'Bank'				=> $row['NAMA_BANK'] ?? '',
+				'Nombor Akaun'		=> $row['NO_AKAUN'] ?? '',
+			];
 			?>
 					<div class="panel panel-default">
 						<div class="panel-heading">
@@ -268,75 +229,16 @@
 						<div class="panel-body">
 							<div class="table-responsive">
 								<table class="table table-striped table-bordered table-hover">
-									<thead>
-										<tr>
-											<div align="center"><img class="img-thumbnail" src="NOK/<?php print($BATCH . "/" .$NO_MATRIK); ?>.JPG" width="140" height="210" onerror="this.src='images/nok_gagal.png'"></div><br>
-										</tr>
-									</thead>
 									<tbody>
+										<?php foreach ($fields as $label => $value) { ?>
 										<tr>
-											<td valign="center" ><div align="center"><b>Nombor Matrik</b></div></td>
-											<td valign="center" ><?php print($NO_MATRIK); ?></td>
+											<td valign="center" ><div align="center"><b><?php echo e($label); ?></b></div></td>
+											<td valign="center" ><div align="left"><?php echo e($value); ?></div></td>
 										</tr>
+										<?php } ?>
 										<tr>
-											<td valign="center" ><div align="center"><b>Nombor Badan</b></div></td>
-											<td valign="center" ><div align="left"><?php print($NO_BADAN); ?></div></td>
-										</tr>
-										<tr>
-											<?php
-												$sql_display = "SELECT BATCH FROM J_BATCH WHERE ID_BATCH = '$BATCH'";
-												$result_dispay = mysql_query($sql_display);
-												while($row = mysql_fetch_array($result_dispay)) { $DBATCH = $row["BATCH"]; } 
-											?>
-											<td valign="center"><div align="center"><b>Batch</b></div></td>
-											<td valign="center"><?php print($DBATCH); ?></td>
-										</tr>
-										<tr>
-											<?php
-												$sql_display = "SELECT PANGKAT FROM J_PANGKAT WHERE ID_PANGKAT = '$PANGKAT'";
-												$result_dispay = mysql_query($sql_display);
-												while($row = mysql_fetch_array($result_dispay)) { $DPANGKAT = $row["PANGKAT"]; } 
-											?>
-											<td valign="center"><div align="center"><b>Pangkat</b></div></td>
-											<td valign="center"><?php print($DPANGKAT); ?></td>
-										</tr>
-										<tr>
-											<td valign="center"><div align="center"><b>Nama</b></div></td>
-											<td valign="center"><?php print($NAMA); ?></td>
-										</tr>
-										<tr>
-											<?php
-												$sql_display = "SELECT KOMPENI FROM J_KOMPENI WHERE ID_KOMPENI = '$KOMPENI'";
-												$result_dispay = mysql_query($sql_display);
-												while($row = mysql_fetch_array($result_dispay)) { $DKOMPENI = $row["KOMPENI"]; } 
-											?>
-											<td valign="center"><div align="center"><b>Kompeni</b></div></td>
-											<td valign="center"><?php print($DKOMPENI); ?></td>
-										</tr>
-										<tr>
-											<?php
-												$sql_display = "SELECT BIRO FROM J_BIRO WHERE ID_BIRO = '$BIRO'";
-												$result_dispay = mysql_query($sql_display);
-												while($row = mysql_fetch_array($result_dispay)) { $DBIRO = $row["BIRO"]; } 
-											?>
-											<td valign="center"><div align="center"><b>Biro</b></div></td>
-											<td valign="center"><?php print($DBIRO); ?></td>
-										</tr>
-										<tr>
-											<td valign="center"><div align="center"><b>Nombor Telefon</b></div></td>
-											<td valign="center"><?php print($TEL1); ?></td>
-										</tr>
-										<tr>
-											<td valign="center"><div align="center"><b>E-Mel</b></div></td>
-											<td valign="center"><?php print($EMEL1); ?></td>
-										</tr>
-										<tr>
-											<td valign="center"><div align="center"><b>Status</b></div></td>
-											<td valign="center"><b><font color='<?php print($WARNA); ?>'><?php print($STATUS); ?></font></b></td>
-										</tr>
-										<tr>
-											<td valign="center"><div align="center"><b>Validasi</b></div></td>
-											<td valign="center"><?php print($VALIDASI); ?></td>
+											<td valign="center"><div align="center"><b>Jenis Akaun</b></div></td>
+											<td valign="center">Asnaf</td>
 										</tr>
 									</tbody>
 								</table>

@@ -1,24 +1,16 @@
+<?php ob_start(); ?>
 <html>
 <head>
 <?php
-	session_start();
-	if(!$_SESSION['login_ez'])
-	{
-		header("Location: index.php?ralat=luput");
-		exit;
-	}
-	$name = $_SESSION['name_ez'];
-	
-	include('connectDB.php');
-	
-	if(isset($_GET["NEGERI"]))
-	{ $GNEG = $_GET["NEGERI"]; } else { $GNEG = null; }
-	
-	if(isset($_GET["DAERAH"]))
-	{ $GDAE = $_GET["DAERAH"]; } else { $GDAE = null; }
-	
-	if(isset($_GET["PERUMAHAN"]))
-	{ $GPER = $_GET["PERUMAHAN"]; } else { $GPER = null; }
+		session_start();
+		require_once __DIR__ . '/connectDB.php';
+		require_login();
+		$name	= $_SESSION['zakat_nama'];
+
+	// Selected filters (shown again in the form).
+	$GNEG = request_text($_GET, "NEGERI");
+	$GDAE = request_text($_GET, "DAERAH");
+	$GPER = request_text($_GET, "PERUMAHAN");
 ?>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -88,9 +80,7 @@
 
             <ul class="nav navbar-top-links navbar-right">
                 <li class="dropdown">
-                    <?php if($_SESSION['priv_ez'] == "ADMN") { print ("Admin "); }
-					else if ($_SESSION['priv_ez'] == "MZKI") { print ("Muzakki | "); }
-					else if ($_SESSION['priv_ez'] == "ASNF") { print ("Asnaf | "); } ?><strong><?php print($name); ?></strong>
+                    <?php echo e(account_label()); ?><strong><?php echo e($name); ?></strong>
                 </li>                
                 <li class="dropdown">
                     <a href="logout.php">
@@ -105,7 +95,7 @@
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
                         <?php
-                            include('nav.php');
+                            include __DIR__ . '/nav.php';
                         ?>
                     </ul>
                 </div>
@@ -139,22 +129,11 @@
 										<option selected disabled> Sila pilih </option>
 										<option disabled> </option>
 										<?php
-										$sql_choose = "SELECT KOD_NEGERI, NEGERI, P_ZAKAT FROM NEGERI ORDER BY P_ZAKAT";
-										$result_choose = mysql_query($sql_choose);
-										while ($row = mysql_fetch_array($result_choose))
+										$result_choose = db_query("SELECT KOD_NEGERI, NEGERI, P_ZAKAT FROM NEGERI ORDER BY P_ZAKAT");
+										while ($row = mysqli_fetch_assoc($result_choose))
 										{
-											$NEGRI1 = $row["KOD_NEGERI"];
-											$NEGRI2 = $row["NEGERI"];
-											$NEGRI3 = $row["P_ZAKAT"];
-											
-											if($NEGRI1 == $GNEG)
-											{
-												echo "<option value=\"$NEGRI1\" selected> $NEGRI3 </option>";
-											}
-											else
-											{
-												echo "<option value=\"$NEGRI1\"> $NEGRI3 </option>";
-											}
+											$selected = $row["KOD_NEGERI"] == $GNEG ? " selected" : "";
+											echo "<option value=\"" . e($row["KOD_NEGERI"]) . "\"$selected> " . e($row["P_ZAKAT"]) . " </option>";
 										} ?>
 									</select>
 								</td>
@@ -169,20 +148,11 @@
 						</table>
 					</form>
                     <?php
-						
                         // Papar senarai
-                        if(isset($_GET['PAPAR']) && $_GET['PAPAR'] == "YES")
+                        $result = null;
+                        if(request_text($_GET, 'PAPAR') == "YES")
                         {
-							$NEGERI		= $_GET['NEGERI'];
-							
-                            // create the listing query
-                            $sql = "SELECT * FROM PERMOHONAN WHERE NEGERI = \"$NEGERI\" ORDER BY JENIS, NAMA";
-							
-							// SELECT * FROM PERMOHONAN WHERE NEGERI = "SLGR" AND DAERAH = "KLNG" AND PERUMAHAN = "KLG1" ORDER BY JENIS, NAMA
-                            // SELECT * FROM PERMOHONAN WHERE NEGERI = "SLGR" AND DAERAH = "KLNG" AND PERUMAHAN = "KLG1" ORDER BY JENIS, (SELECT NAMA FROM ASNAF WHERE NO_KP = "880101014591")
-							
-                            // execute listing query
-                            $result = mysql_query($sql) or die("SQL select statement failed");
+                            $result = db_query("SELECT * FROM PERMOHONAN WHERE NEGERI = ? ORDER BY JENIS, NAMA", [$GNEG]);
                         }
                     ?>
                 </div>
@@ -209,43 +179,31 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                        <?php                            
+                        <?php
                             // Papar table
-                            if(isset($_GET['PAPAR']))
-                            {            
+                            if($result)
+                            {
                                 // Initialise index number
                                 $BIL = 0;
-                                
-                                // Display kompeni name array
-                                $sql_jns	= "SELECT * FROM JENIS_ASNAF";
-                                $result_jns	= mysql_query($sql_jns);
-                                while($row_jns	= mysql_fetch_array($result_jns))
+
+                                // Asnaf type names
+                                $DJNS = [];
+                                $result_jns	= db_query("SELECT KOD_JENIS, JENIS FROM JENIS_ASNAF");
+                                while($row_jns	= mysqli_fetch_assoc($result_jns))
                                 {
-                                    $JNS1			= $row_jns["KOD_JENIS"];
-                                    $JNS2			= $row_jns["JENIS"];
-                                    $DJNS[$JNS1]	= $JNS2;
+                                    $DJNS[$row_jns["KOD_JENIS"]] = $row_jns["JENIS"];
                                 }
-                                
+
                                 // iterate through all rows in result set
-                                while ($row = mysql_fetch_array($result))
+                                while ($row = mysqli_fetch_assoc($result))
                                 {
                                     $BIL++;
-                                    
-                                    // extract specific fields
-                                    $NO_SIRI	= $row['NO_SIRI'];
-                                    $PEMOHON	= $row['PEMOHON'];
-                                    $NAMA		= $row['NAMA'];
-                                    $JENIS		= $row['JENIS'];
-                                    $KIFAYAH_BAKI	= $row['KIFAYAH_BAKI'];
-                                    
-                                    // Display subtitutes
-                                    $DJENIS		= $DJNS[$JENIS];
-                                    
-                                    // output student information
+                                    $DJENIS		= $DJNS[$row['JENIS']] ?? $row['JENIS'];
+
                                     echo "<tr>\n\t\t\t\t\t\t\t";
                                     echo "<td align=center>$BIL</td>\n\t\t\t\t\t\t\t";
-                                    echo "<td>$NAMA</td>\n\t\t\t\t\t\t\t<td align=center>$DJENIS</td>\n\t\t\t\t\t\t\t<td align=center>RM $KIFAYAH_BAKI</td>\n\t\t\t\t\t\t\t<td align=center><a target='_blank' href='rincian.php?ID=$NO_SIRI'><button class='btn btn-outline btn-info'>Butiran</button></a></td>\n\t\t\t\t\t\t\t";
-                                    echo "</tr>\n\t\t\t\t\t\t"; 
+                                    echo "<td>" . e($row['NAMA']) . "</td>\n\t\t\t\t\t\t\t<td align=center>" . e($DJENIS) . "</td>\n\t\t\t\t\t\t\t<td align=center>RM " . e($row['KIFAYAH_BAKI']) . "</td>\n\t\t\t\t\t\t\t<td align=center><a target='_blank' href='rincian.php?ID=" . e($row['NO_SIRI']) . "'><button class='btn btn-outline btn-info'>Butiran</button></a></td>\n\t\t\t\t\t\t\t";
+                                    echo "</tr>\n\t\t\t\t\t\t";
                                 }
                             }
                         ?>

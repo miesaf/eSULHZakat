@@ -1,113 +1,84 @@
+<?php ob_start(); ?>
 <html>
 <head>
 	<?php
-		include('connectDB.php');
+		require_once __DIR__ . '/connectDB.php';
+		
+		// Checks the uploaded proof of income: PDF, JPEG or PNG (extension and content), 1 byte to 5 MB.
+		// Returns [extension, error message or null].
+		function semak_bukti($file): array
+		{
+			$allowed = ['pdf' => ['application/pdf'], 'jpg' => ['image/jpeg'], 'jpeg' => ['image/jpeg'], 'png' => ['image/png']];
+			
+			if (!is_array($file) || !is_string($file['tmp_name'] ?? null) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE)
+			{
+				return [null, "Sila muat naik bukti pendapatan/slip gaji!"];
+			}
+			if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE || $file['size'] > 5000000)
+			{
+				return [null, "Saiz fail melebihi 5MB!"];
+			}
+			if ($file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name']))
+			{
+				return [null, "Fail gagal dimuat naik!"];
+			}
+			if ($file['size'] <= 0)
+			{
+				return [null, "Saiz fail adalah sifar/tiada data!"];
+			}
+			
+			$ext	= strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
+			$mime	= (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+			if (!isset($allowed[$ext]) || !in_array($mime, $allowed[$ext], true))
+			{
+				return [null, "Fail harus dalam format PDF/JPG/JPEG/PNG!"];
+			}
+			return [$ext, null];
+		}
 		
 		if(isset($_POST['DAFTAR']))
 		{
-			// Declaring null value for optional variables
-			$JLN_2		= null;
+			[$f, $ralat] = asnaf_fields($_POST);
 			
-			// Variables from pendaftaran.php
-			$NAMA		= mysql_real_escape_string($_POST['NAMA']);
-			$NO_KP		= mysql_real_escape_string($_POST['NO_KP']);
-			$KATA_LALUAN= mysql_real_escape_string($_POST['KATA_LALUAN']);
-			$TEL		= mysql_real_escape_string($_POST['TEL']);
-			$JLN_1		= mysql_real_escape_string($_POST['JLN_1']);
-			$JLN_2		= mysql_real_escape_string($_POST['JLN_2']);
-			$POSKOD		= mysql_real_escape_string($_POST['POSKOD']);
-			$PERUMAHAN	= mysql_real_escape_string($_POST['PERUMAHAN']);
-			$BANDAR		= mysql_real_escape_string($_POST['BANDAR']);
-			$DAERAH		= mysql_real_escape_string($_POST['DAERAH']);
-			$NEGERI		= mysql_real_escape_string($_POST['NEGERI']);
-			$PENDAPATAN	= mysql_real_escape_string($_POST['PENDAPATAN']);
-			$JENIS		= mysql_real_escape_string($_POST['JENIS']);
-			$BANK		= mysql_real_escape_string($_POST['BANK']);
-			$NO_AKAUN	= mysql_real_escape_string($_POST['NO_AKAUN']);
-			
-			$uploadOk = true;
-		
-			$target_file = $_FILES["imfile"]["name"];
-			
-			$fileType = pathinfo($target_file,PATHINFO_EXTENSION);
-			
-			// Check file type
-			if(($fileType == "pdf") || ($fileType == "PDF") || ($fileType == "img") || ($fileType == "IMG") || ($fileType == "jpeg") || ($fileType == "JPEG") || ($fileType == "png") || ($fileType == "PNG"))
+			if($ralat === null && !kod_sah('JENIS_ASNAF', 'KOD_JENIS', $f['JENIS']))
 			{
-				$uploadOk = true;
+				$ralat = "Sila pilih jenis asnaf.";
 			}
-			else
+			if($ralat === null && db_value("SELECT COUNT(*) FROM CADANG_ASNAF WHERE NO_KP = ?", [$f['NO_KP']]) !== "0")
 			{
-				$uploadOk = false;
-				
-				echo "<script type=\"text/javascript\">
-						alert(\"RALAT: Fail harus dalam format PDF/IMG/JPEG/PNG!\");
-					</script>";
+				$ralat = "Asnaf ini telah dicadangkan.";
 			}
 			
-			// Check file size less than 5MB
-			if($_FILES["imfile"]["size"] > 5000000)
+			$ext = null;
+			if($ralat === null)
 			{
-				$uploadOk = false;
-				
-				echo "<script type=\"text/javascript\">
-						alert(\"RALAT: Saiz fail melebihi 5MB!\");
-					</script>";
+				[$ext, $ralat] = semak_bukti($_FILES["imfile"] ?? null);
 			}
 			
-			// Check file size not empty
-			if($_FILES["imfile"]["size"] <= 0)
-			{
-				$uploadOk = false;
-				
-				echo "<script type=\"text/javascript\">
-						alert(\"RALAT: Saiz fail adalah sifar/tiada data!\");
-					</script>";
-			}
-			
+			// A random file name: nothing from the visitor (name or IC number) ends up in it.
 			$F_NAME	= null;
-			if($uploadOk)
+			if($ralat === null)
 			{
-				// Date Generator
-				$h = "8";	// to rematch time with Malaysian GMT +8 time (please truncate the +/- sign)
-				$hm = $h * 60; 
-				$ms = $hm * 60;
-				$DATETIME = gmdate("ymdHi", time()+($ms));	// use (-) for -ve GMT and (+) for +ve GMT
-				
-				$F_NAME = $NO_KP . "_" . $DATETIME . "." . pathinfo($target_file,PATHINFO_EXTENSION);
-				
-				$f_stat	= move_uploaded_file($_FILES["imfile"]["tmp_name"], "bukti/" . $F_NAME);
+				$F_NAME = bin2hex(random_bytes(16)) . "." . $ext;
+				if(!move_uploaded_file($_FILES["imfile"]["tmp_name"], __DIR__ . "/bukti/" . $F_NAME))
+				{
+					$ralat = "Fail gagal dimuat naik!";
+				}
 			}
 			
-			//SQL query command
-			$sql="INSERT INTO CADANG_ASNAF (NAMA, NO_KP, TEL, JLN_1, JLN_2, POSKOD, PERUMAHAN, BANDAR, DAERAH, NEGERI, PENDAPATAN, BUKTI, JENIS, BANK, NO_AKAUN) VALUES (\"$NAMA\", $NO_KP, \"$TEL\", \"$JLN_1\", \"$JLN_2\", \"$POSKOD\", \"$PERUMAHAN\", \"$BANDAR\", \"$DAERAH\", \"$NEGERI\", \"$PENDAPATAN\", \"$F_NAME\", \"$JENIS\", \"$BANK\", \"$NO_AKAUN\")";
-			
-			// execute query
-			$exe_sql = mysql_query($sql);
-			
-			// confirming the record is added
-			if ($exe_sql)
+			if($ralat !== null)
 			{
-				echo '<html>
-						<head>
-							<script>
-								window.alert("Cadangan berjaya disimpan!");
-							</script>
-							<meta http-equiv="refresh" content="0; url=index.php" />
-						</head>
-					</html>';
+				js_alert("RALAT: " . $ralat);
+			}
+			elseif(db_query("INSERT INTO CADANG_ASNAF (NAMA, NO_KP, TEL, JLN_1, JLN_2, POSKOD, PERUMAHAN, BANDAR, DAERAH, NEGERI, PENDAPATAN, BUKTI, JENIS, BANK, NO_AKAUN) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+				[$f['NAMA'], $f['NO_KP'], $f['TEL'], $f['JLN_1'], $f['JLN_2'], $f['POSKOD'], $f['PERUMAHAN'], $f['BANDAR'], $f['DAERAH'], $f['NEGERI'], $f['PENDAPATAN'], $F_NAME, $f['JENIS'], $f['BANK'], $f['NO_AKAUN']]))
+			{
+				js_alert("Cadangan berjaya disimpan!", "index.php");
 			}
 			else
 			{
-				echo "SQL insert statement failed.<br>" . mysql_error();
-				echo '<html>
-						<head>
-							<script>
-								window.alert("Cadangan gagal disimpan!");
-								window.history.go(-1);
-							</script>
-						</head>
-					</html>';
+				@unlink(__DIR__ . "/bukti/" . $F_NAME);
+				js_alert("Cadangan gagal disimpan!");
 			}
 		}
 	?>
@@ -241,12 +212,12 @@
 													<option value=""> Sila pilih </option>
 													<option disabled> </option>
 													<?php
-													$sql_choose = "SELECT * FROM NEGERI ORDER BY NEGERI";
-													$result_choose = mysql_query($sql_choose);
-													while ($row = mysql_fetch_array($result_choose))
+													$sql_choose = "SELECT KOD_NEGERI, NEGERI FROM NEGERI ORDER BY NEGERI";
+													$result_choose = db_query($sql_choose);
+													while ($row = mysqli_fetch_assoc($result_choose))
 													{
-														$NEGERI1 = $row["KOD_NEGERI"];
-														$NEGERI2 = $row["NEGERI"];
+														$NEGERI1 = e($row["KOD_NEGERI"]);
+														$NEGERI2 = e($row["NEGERI"]);
 														echo '<option value="' . $NEGERI1 . '"> ' . $NEGERI1 . ' - ' . $NEGERI2 . '</option>';
 													} ?>
 												</select>
@@ -256,12 +227,12 @@
 													<option disabled> </option>
 													<?php
 													$sql_choose = "SELECT * FROM DAERAH ORDER BY KOD_NEGERI, NAMA_DAERAH";
-													$result_choose = mysql_query($sql_choose);
-													while ($row = mysql_fetch_array($result_choose))
+													$result_choose = db_query($sql_choose);
+													while ($row = mysqli_fetch_assoc($result_choose))
 													{
-														$DAERAH1 	= $row["KOD_DAERAH"];
-														$DAERAH2 	= $row["NAMA_DAERAH"];
-														$DAERAH3	= $row["KOD_NEGERI"];
+														$DAERAH1 	= e($row["KOD_DAERAH"]);
+														$DAERAH2 	= e($row["NAMA_DAERAH"]);
+														$DAERAH3	= e($row["KOD_NEGERI"]);
 														echo '<option class="' . $DAERAH3 . '" value="' . $DAERAH1 . '"> ' . $DAERAH1 . ' - ' . $DAERAH2 . '</option>';
 													} ?>
 												</select>
@@ -273,12 +244,12 @@
 													<option disabled> </option>
 													<?php
 													$sql_choose = "SELECT * FROM PERUMAHAN ORDER BY KOD_DAERAH, NAMA_KWSN";
-													$result_choose = mysql_query($sql_choose);
-													while ($row = mysql_fetch_array($result_choose))
+													$result_choose = db_query($sql_choose);
+													while ($row = mysqli_fetch_assoc($result_choose))
 													{
-														$KWSN1	= $row["KOD_KWSN"];
-														$KWSN2	= $row["NAMA_KWSN"];
-														$KWSN3	= $row["KOD_DAERAH"];
+														$KWSN1	= e($row["KOD_KWSN"]);
+														$KWSN2	= e($row["NAMA_KWSN"]);
+														$KWSN3	= e($row["KOD_DAERAH"]);
 														echo '<option class="' . $KWSN3 . '" value="' . $KWSN1 . '"> ' . $KWSN1 . ' - ' . $KWSN2 . '</option>';
 													} ?>
 												</select>
@@ -290,9 +261,9 @@
 										</div>
 										<div class="form-group">
 											<label>Muat naik bukti pendapatan/slip gaji</label>
-											<input class="form-control" type="file" name="imfile">
+											<input class="form-control" type="file" name="imfile" accept=".pdf,.jpg,.jpeg,.png">
 											<p class="help-block">
-												<font color="red">Sila muat naik fail berformat PDF, IMG, JPEG, PNG serta bersaiz kurang <b>5MB</b> sahaja!</font>
+												<font color="red">Sila muat naik fail berformat PDF, JPG, JPEG, PNG serta bersaiz kurang <b>5MB</b> sahaja!</font>
 											</p>
 										</div>
 										<div class="form-group">
@@ -302,11 +273,11 @@
 												<option disabled> </option>
 												<?php
 												$sql_choose = "SELECT * FROM JENIS_ASNAF ORDER BY JENIS";
-												$result_choose = mysql_query($sql_choose);
-												while ($row = mysql_fetch_array($result_choose))
+												$result_choose = db_query($sql_choose);
+												while ($row = mysqli_fetch_assoc($result_choose))
 												{
-													$JENIS1 = $row["KOD_JENIS"];
-													$JENIS2 = $row["JENIS"];
+													$JENIS1 = e($row["KOD_JENIS"]);
+													$JENIS2 = e($row["JENIS"]);
 													echo '<option value="' . $JENIS1 . '"> ' . $JENIS2 . '</option>';
 												} ?>
 											</select>
@@ -318,11 +289,11 @@
 												<option disabled> </option>
 												<?php
 												$sql_choose = "SELECT * FROM BANK ORDER BY NAMA_BANK";
-												$result_choose = mysql_query($sql_choose);
-												while ($row = mysql_fetch_array($result_choose))
+												$result_choose = db_query($sql_choose);
+												while ($row = mysqli_fetch_assoc($result_choose))
 												{
-													$BANK1 = $row["KOD_BANK"];
-													$BANK2 = $row["NAMA_BANK"];
+													$BANK1 = e($row["KOD_BANK"]);
+													$BANK2 = e($row["NAMA_BANK"]);
 													echo '<option value="' . $BANK1 . '"> ' . $BANK2 . '</option>';
 												} ?>
 											</select>

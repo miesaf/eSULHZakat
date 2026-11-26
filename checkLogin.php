@@ -1,131 +1,63 @@
 <?php
 	session_start();
-	
-	include('connectDB.php');
-	
-	$enteredIC	= mysql_real_escape_string($_POST['nokp']);
-	$enteredPW	= mysql_real_escape_string($_POST['ktln']);
-	$enteredTP	= mysql_real_escape_string($_POST['akaun']);
-		
-	// Checking Asnaf Account ##################################################################################################
-	function asnaf($enteredIC, $enteredPW)
-	{
-		//SQL query command
-		$sql="SELECT NAMA, NO_KP, KATA_LALUAN FROM ASNAF WHERE NO_KP = $enteredIC";
-		
-		// execute query
-		$res_sql	= mysql_query($sql);
-		$row		= mysql_fetch_array($res_sql);
-		
-		// extract specific fields
-		$NO_KP		= $row["NO_KP"];
-		$KATA_LALUAN= $row["KATA_LALUAN"];
-		$NAMA		= $row["NAMA"];
-		
-		if(($enteredIC == $NO_KP) && ($enteredPW == $KATA_LALUAN))
-		{
-			$_SESSION['login_ez']	= "YES";
-			$_SESSION['name_ez']	= $NAMA;
-			$_SESSION['priv_ez']	= "ASNF";
-			$_SESSION['ident_ez'] 	= $NO_KP;
-			
-			$url = "Location: utama.php";
-			header($url);
-			exit;
-		}
-		else
-		{
-			return $problem = "gagal";
-		}
-	}
-	
-	// Checking Muzakki Account ##################################################################################################
-	function muzakki($enteredIC, $enteredPW)
-	{
-		//SQL query command
-		$sql="SELECT * FROM MUZAKKI WHERE NO_KP = $enteredIC";
-		
-		// execute query
-		$res_sql	= mysql_query($sql);
-		$row		= mysql_fetch_array($res_sql);
-		
-		// extract specific fields
-		$NO_KP		= $row["NO_KP"];
-		$KATA_LALUAN= $row["KATA_LALUAN"];
-		$NAMA		= $row["NAMA"];
-		
-		if(($enteredIC == $NO_KP) && ($enteredPW == $KATA_LALUAN))
-		{
-			$_SESSION['login_ez']	= "YES";
-			$_SESSION['name_ez']	= $NAMA;
-			$_SESSION['priv_ez']	= "MZKI";
-			$_SESSION['ident_ez'] 	= $NO_KP;
-			
-			$url = "Location: utama.php";
-			header($url);
-			exit;
-		}
-		else
-		{
-			return $problem = "gagal";
-		}
-	}
-	
-	// Checking Admin Account ##################################################################################################
-	function admin($enteredIC, $enteredPW)
-	{
-		//SQL query command
-		$sql="SELECT * FROM NEGERI WHERE KOD_NEGERI = \"$enteredIC\"";
-		
-		// execute query
-		$res_sql = mysql_query($sql);
-		$row = mysql_fetch_array($res_sql);
-		
-		// extract specific fields
-		$KOD_NEGERI	= $row["KOD_NEGERI"];
-		$KATA_LALUAN= $row["KATA_LALUAN"];
-		$P_ZAKAT	= $row["P_ZAKAT"];
 
-		if(($enteredIC == $KOD_NEGERI) && ($enteredPW == $KATA_LALUAN))
-		{
-			$_SESSION['login_ez']	= "YES";
-			$_SESSION['name_ez']	= $P_ZAKAT;
-			$_SESSION['priv_ez']	= "ADMN";
-			$_SESSION['ident_ez'] 	= $KOD_NEGERI;
-			
-			$url = "Location: utama.php";
-			header($url);
-			exit;
-		}
-		else		
-		{
-			$problem = "gagal";
-		}
-	
-		return $problem;
-	}
-	
-	if($enteredTP == "1")
+	require_once __DIR__ . '/connectDB.php';
+
+	$enteredIC	= request_text($_POST, 'nokp');
+	$enteredPW	= is_string($_POST['ktln'] ?? null) ? $_POST['ktln'] : '';
+	$enteredTP	= request_text($_POST, 'akaun');
+
+	// Account types: 1 = asnaf (ASNAF), 2 = muzakki (MUZAKKI, the login form), 3 = state zakat body (NEGERI).
+	$types = [
+		'1' => ['priv' => 'ASNF', 'sql' => "SELECT NO_KP AS ID, NAMA, KATA_LALUAN FROM ASNAF WHERE NO_KP = ?", 'table' => 'ASNAF', 'key' => 'NO_KP'],
+		'2' => ['priv' => 'MZKI', 'sql' => "SELECT NO_KP AS ID, NAMA, KATA_LALUAN FROM MUZAKKI WHERE NO_KP = ?", 'table' => 'MUZAKKI', 'key' => 'NO_KP'],
+		'3' => ['priv' => 'ADMN', 'sql' => "SELECT KOD_NEGERI AS ID, P_ZAKAT AS NAMA, KATA_LALUAN FROM NEGERI WHERE KOD_NEGERI = ?", 'table' => 'NEGERI', 'key' => 'KOD_NEGERI'],
+	];
+
+	if (!isset($types[$enteredTP]))
 	{
-		$problem = asnaf($enteredIC, $enteredPW);
+		header("Location: index.php?ralat=type");
+		exit;
 	}
-	elseif($enteredTP == "2")
+	$type = $types[$enteredTP];
+
+	// IC numbers are digits only (no dashes); state codes are 4 letters.
+	$validID = $enteredTP === '3' ? (bool) preg_match('/^[A-Za-z]{1,4}$/', $enteredIC) : (bool) preg_match('/^[0-9]{1,12}$/', $enteredIC);
+
+	$row = null;
+	if ($validID && $enteredPW !== '')
 	{
-		$problem = muzakki($enteredIC, $enteredPW);
+		$res_sql = db_query($type['sql'], [$enteredIC]);
+		$row = $res_sql ? mysqli_fetch_assoc($res_sql) : null;
 	}
-	elseif($enteredTP == "3")
+
+	$valid = false;
+	$hashed = false;
+	if ($row && $row['KATA_LALUAN'] !== '')
 	{
-		$problem = admin($enteredIC, $enteredPW);
+		$stored = $row['KATA_LALUAN'];
+		$hashed = password_get_info($stored)['algo'] !== null;
+		$valid	= $hashed ? password_verify($enteredPW, $stored) : hash_equals($stored, $enteredPW);
 	}
-	else
+
+	if (!$valid)
 	{
-		$problem = "type";
+		header("Location: index.php?ralat=gagal");
+		exit;
 	}
-	
-	if(!$connection){ $problem = "server"; }
-	elseif(!$selection){ $problem = "db"; }
-	
-	$url = "Location: index.php?ralat=$problem";
-	header($url);
+
+	// A password still in plain text (tools/hash-passwords.php not run yet) is hashed on its first login.
+	if (!$hashed || password_needs_rehash($row['KATA_LALUAN'], PASSWORD_DEFAULT))
+	{
+		db_query("UPDATE {$type['table']} SET KATA_LALUAN = ? WHERE {$type['key']} = ?", [password_hash($enteredPW, PASSWORD_DEFAULT), $row['ID']]);
+	}
+
+	session_regenerate_id(true);
+	$_SESSION['zakat_login']	= "YES";
+	$_SESSION['zakat_nama']		= $row['NAMA'];
+	$_SESSION['zakat_priv']		= $type['priv'];
+	$_SESSION['zakat_ident']	= (string) $row['ID'];
+
+	header("Location: utama.php");
 	exit;
 ?>
