@@ -1,59 +1,39 @@
+<?php ob_start(); ?>
 <html>
 <head>
 	<?php
-		include('connectDB.php');
+		require_once __DIR__ . '/connectDB.php';
 		
 		if(isset($_POST['DAFTAR']))
 		{
-			// Declaring null value for optional variables
-			$JLN_2		= null;
+			[$f, $ralat]	= asnaf_fields($_POST);
+			$KATA_LALUAN	= is_string($_POST['KATA_LALUAN'] ?? null) ? $_POST['KATA_LALUAN'] : '';
 			
-			// Variables from pendaftaran.php
-			$NAMA		= mysqli_real_escape_string($condb, $_POST['NAMA']);
-			$NO_KP		= mysqli_real_escape_string($condb, $_POST['NO_KP']);
-			$KATA_LALUAN= mysqli_real_escape_string($condb, $_POST['KATA_LALUAN']);
-			$TEL		= mysqli_real_escape_string($condb, $_POST['TEL']);
-			$JLN_1		= mysqli_real_escape_string($condb, $_POST['JLN_1']);
-			$JLN_2		= mysqli_real_escape_string($condb, $_POST['JLN_2']);
-			$POSKOD		= mysqli_real_escape_string($condb, $_POST['POSKOD']);
-			$PERUMAHAN	= mysqli_real_escape_string($condb, $_POST['PERUMAHAN']);
-			$BANDAR		= mysqli_real_escape_string($condb, $_POST['BANDAR']);
-			$DAERAH		= mysqli_real_escape_string($condb, $_POST['DAERAH']);
-			$NEGERI		= mysqli_real_escape_string($condb, $_POST['NEGERI']);
-			$PENDAPATAN	= mysqli_real_escape_string($condb, $_POST['PENDAPATAN']);
-			$JENIS		= mysqli_real_escape_string($condb, $_POST['JENIS']);
-			$BANK		= mysqli_real_escape_string($condb, $_POST['BANK']);
-			$NO_AKAUN	= mysqli_real_escape_string($condb, $_POST['NO_AKAUN']);
-			
-			//SQL query command
-			$sql="INSERT INTO ASNAF (NAMA, NO_KP, KATA_LALUAN, TEL, JLN_1, JLN_2, POSKOD, PERUMAHAN, BANDAR, DAERAH, NEGERI, PENDAPATAN, JENIS, BANK, NO_AKAUN) VALUES (\"$NAMA\", $NO_KP, \"$KATA_LALUAN\", \"$TEL\", \"$JLN_1\", \"$JLN_2\", \"$POSKOD\", \"$PERUMAHAN\", \"$BANDAR\", \"$DAERAH\", \"$NEGERI\", \"$PENDAPATAN\", \"$JENIS\", \"$BANK\", \"$NO_AKAUN\")";
-			
-			// execute query
-			$exe_sql = mysqli_query($condb, $sql);
-			
-			// confirming the record is added
-			if ($exe_sql)
+			if($ralat === null && $KATA_LALUAN === '')
 			{
-				echo '<html>
-						<head>
-							<script>
-								window.alert("Pendaftaran berjaya!\nRekod telah di simpan ke dalam pangkalan data.");
-							</script>
-							<meta http-equiv="refresh" content="0; url=index.php" />
-						</head>
-					</html>';
+				$ralat = "Sila isi kata laluan.";
+			}
+			if($ralat === null && !kod_sah('JENIS_ASNAF', 'KOD_JENIS', $f['JENIS']))
+			{
+				$ralat = "Sila pilih jenis asnaf.";
+			}
+			if($ralat === null && db_value("SELECT COUNT(*) FROM ASNAF WHERE NO_KP = ?", [$f['NO_KP']]) !== "0")
+			{
+				$ralat = "Nombor K/P ini telah didaftarkan.";
+			}
+			
+			if($ralat !== null)
+			{
+				js_alert("Pendaftaran gagal!\n" . $ralat);
+			}
+			elseif(db_query("INSERT INTO ASNAF (NAMA, NO_KP, KATA_LALUAN, TEL, JLN_1, JLN_2, POSKOD, PERUMAHAN, BANDAR, DAERAH, NEGERI, PENDAPATAN, JENIS, BANK, NO_AKAUN) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+				[$f['NAMA'], $f['NO_KP'], password_hash($KATA_LALUAN, PASSWORD_DEFAULT), $f['TEL'], $f['JLN_1'], $f['JLN_2'], $f['POSKOD'], $f['PERUMAHAN'], $f['BANDAR'], $f['DAERAH'], $f['NEGERI'], $f['PENDAPATAN'], $f['JENIS'], $f['BANK'], $f['NO_AKAUN']]))
+			{
+				js_alert("Pendaftaran berjaya!\nRekod telah di simpan ke dalam pangkalan data.", "index.php");
 			}
 			else
 			{
-				echo "SQL insert statement failed.<br>";
-				echo '<html>
-						<head>
-							<script>
-								window.alert("Pendaftaran gagal!\nRekod tidak di simpan ke dalam pangkalan data");
-								window.history.go(-1);
-							</script>
-						</head>
-					</html>';
+				js_alert("Pendaftaran gagal!\nRekod tidak di simpan ke dalam pangkalan data");
 			}
 		}
 	?>
@@ -192,11 +172,11 @@
 													<option disabled> </option>
 													<?php
 													$sql_choose = "SELECT * FROM PERUMAHAN ORDER BY KOD_DAERAH, NAMA_KWSN";
-													$result_choose = mysqli_query($condb, $sql_choose);
-													while ($row = mysqli_fetch_array($result_choose))
+													$result_choose = db_query($sql_choose);
+													while ($row = mysqli_fetch_assoc($result_choose))
 													{
-														$KWSN1 = $row["KOD_KWSN"];
-														$KWSN2 = $row["NAMA_KWSN"];
+														$KWSN1 = e($row["KOD_KWSN"]);
+														$KWSN2 = e($row["NAMA_KWSN"]);
 														echo '<option value="' . $KWSN1 . '"> ' . $KWSN1 . ' - ' . $KWSN2 . '</option>';
 													} ?>
 												</select>
@@ -208,11 +188,11 @@
 													<option disabled> </option>
 													<?php
 													$sql_choose = "SELECT * FROM DAERAH ORDER BY KOD_NEGERI, NAMA_DAERAH";
-													$result_choose = mysqli_query($condb, $sql_choose);
-													while ($row = mysqli_fetch_array($result_choose))
+													$result_choose = db_query($sql_choose);
+													while ($row = mysqli_fetch_assoc($result_choose))
 													{
-														$DAERAH1 = $row["KOD_DAERAH"];
-														$DAERAH2 = $row["NAMA_DAERAH"];
+														$DAERAH1 = e($row["KOD_DAERAH"]);
+														$DAERAH2 = e($row["NAMA_DAERAH"]);
 														echo '<option value="' . $DAERAH1 . '"> ' . $DAERAH1 . ' - ' . $DAERAH2 . '</option>';
 													} ?>
 												</select>
@@ -221,12 +201,12 @@
 													<option disabled selected> Sila pilih </option>
 													<option disabled> </option>
 													<?php
-													$sql_choose = "SELECT * FROM NEGERI ORDER BY NEGERI";
-													$result_choose = mysqli_query($condb, $sql_choose);
-													while ($row = mysqli_fetch_array($result_choose))
+													$sql_choose = "SELECT KOD_NEGERI, NEGERI FROM NEGERI ORDER BY NEGERI";
+													$result_choose = db_query($sql_choose);
+													while ($row = mysqli_fetch_assoc($result_choose))
 													{
-														$NEGERI1 = $row["KOD_NEGERI"];
-														$NEGERI2 = $row["NEGERI"];
+														$NEGERI1 = e($row["KOD_NEGERI"]);
+														$NEGERI2 = e($row["NEGERI"]);
 														echo '<option value="' . $NEGERI1 . '"> ' . $NEGERI1 . ' - ' . $NEGERI2 . '</option>';
 													} ?>
 												</select>
@@ -243,11 +223,11 @@
 												<option disabled> </option>
 												<?php
 												$sql_choose = "SELECT * FROM JENIS_ASNAF ORDER BY JENIS";
-												$result_choose = mysqli_query($condb, $sql_choose);
-												while ($row = mysqli_fetch_array($result_choose))
+												$result_choose = db_query($sql_choose);
+												while ($row = mysqli_fetch_assoc($result_choose))
 												{
-													$JENIS1 = $row["KOD_JENIS"];
-													$JENIS2 = $row["JENIS"];
+													$JENIS1 = e($row["KOD_JENIS"]);
+													$JENIS2 = e($row["JENIS"]);
 													echo '<option value="' . $JENIS1 . '"> ' . $JENIS2 . '</option>';
 												} ?>
 											</select>
@@ -259,11 +239,11 @@
 												<option disabled> </option>
 												<?php
 												$sql_choose = "SELECT * FROM BANK ORDER BY NAMA_BANK";
-												$result_choose = mysqli_query($condb, $sql_choose);
-												while ($row = mysqli_fetch_array($result_choose))
+												$result_choose = db_query($sql_choose);
+												while ($row = mysqli_fetch_assoc($result_choose))
 												{
-													$BANK1 = $row["KOD_BANK"];
-													$BANK2 = $row["NAMA_BANK"];
+													$BANK1 = e($row["KOD_BANK"]);
+													$BANK2 = e($row["NAMA_BANK"]);
 													echo '<option value="' . $BANK1 . '"> ' . $BANK2 . '</option>';
 												} ?>
 											</select>

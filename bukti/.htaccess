@@ -1,0 +1,8 @@
+# Uploaded proof of income: never served directly (bukti.php serves it to logged-in users) and never run as code.
+Require all denied
+RemoveHandler .php .phtml .phar
+RemoveType .php .phtml .phar
+<FilesMatch "\.(php|phtml|phar)$">
+	Require all denied
+</FilesMatch>
+Options -Indexes -ExecCGI

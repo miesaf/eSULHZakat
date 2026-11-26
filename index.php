@@ -1,3 +1,4 @@
+<?php ob_start(); ?>
 <html>
 <head>
     <meta charset="utf-8">
@@ -23,21 +24,16 @@
 	
 	<?php		
 		session_start();
-		if(isset($_SESSION['login_ez']))
+		require_once __DIR__ . '/connectDB.php';
+		if(!empty($_SESSION['zakat_login']))
 		{
 			header("Location: utama.php");
 			exit;
 		}
 		
-		// Clear reset
-		include('connectDB.php');
-		
 		$problem = ""; // 2) Declare
 		// $problem = $_GET["problem"];	// 1) Undefined index error
-		if(isset($_GET["ralat"]))	// 3) The magic function
-		{
-			$problem = $_GET["ralat"];
-		}
+		$problem = request_text($_GET, "ralat");
 		$errormsg = "<font color='red'> RALAT: ";
 		if($problem == "gagal")
 		{

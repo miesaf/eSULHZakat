@@ -1,15 +1,11 @@
+<?php ob_start(); ?>
 <html>
 <head>
 	<?php
 		session_start();
-		if(!$_SESSION['login_ez'])
-		{
-			header("Location: index.php?ralat=luput");
-			exit;
-		}
-		$name	= $_SESSION['name_ez'];
-		
-		include('connectDB.php');
+		require_once __DIR__ . '/connectDB.php';
+		require_login();
+		$name	= $_SESSION['zakat_nama'];
 	?>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -87,9 +83,7 @@
 
             <ul class="nav navbar-top-links navbar-right">
 				<li class="dropdown">
-					<?php if($_SESSION['priv_ez'] == "ADMN") { print ("Admin "); }
-					else if ($_SESSION['priv_ez'] == "MZKI") { print ("Muzakki | "); }
-					else if ($_SESSION['priv_ez'] == "ASNF") { print ("Asnaf | "); } ?><strong><?php print($name); ?></strong>
+					<?php echo e(account_label()); ?><strong><?php echo e($name); ?></strong>
 				</li>				
 				<li class="dropdown">
 					<a href="logout.php">
@@ -104,7 +98,7 @@
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
                         <?php
-							include('nav.php');
+							include __DIR__ . '/nav.php';
 						?>
                     </ul>
                 </div>
@@ -134,84 +128,44 @@
 							<div class="table-responsive">
 								<table class="table table-striped table-bordered table-hover">
 					<?php
-						$ID = mysqli_real_escape_string($condb, $_GET['ID']);
-						
-						$D_BC = false;
-						
-						if($ID != null)
-						{
-							// create the query
-							$sql = "SELECT * FROM CADANG_ASNAF WHERE NO_KP = $ID";
-							
-							// execute query
-							$result = mysqli_query($condb, $sql) or die("SQL select statement failed");
-							
-							// iterate through all rows in result set
-							if($row = mysqli_fetch_array($result))
-							{
-								// display barcode
-								$D_BC		= true;
-								
-								// extract specific fields
-								$NO_KP			= $row["NO_KP"];
-								$NAMA 			= $row["NAMA"];
-								$TEL			= $row["TEL"];
-								$JLN_1			= $row["JLN_1"];
-								$JLN_2			= $row["JLN_2"];
-								$POSKOD			= $row["POSKOD"];
-								$PERUMAHAN 		= $row["PERUMAHAN"];
-								$BANDAR			= $row["BANDAR"];
-								$DAERAH 		= $row["DAERAH"];
-								$NEGERI 		= $row["NEGERI"];
-								$PENDAPATAN		= $row["PENDAPATAN"];
-								$BUKTI			= $row["BUKTI"];
-								$JENIS			= $row["JENIS"];
-								$BANK			= $row["BANK"];
-								$NO_AKAUN		= $row["NO_AKAUN"];
-								
-								// Decode codes into string
-								$sql_display = "SELECT NEGERI FROM NEGERI WHERE KOD_NEGERI = '$NEGERI'";
-								$result_dispay = mysqli_query($condb, $sql_display);
-								while($row = mysqli_fetch_array($result_dispay)) { $DNEGERI = $row["NEGERI"]; }
-								
-								$sql_display = "SELECT NAMA_DAERAH FROM DAERAH WHERE KOD_DAERAH = '$DAERAH'";
-								$result_dispay = mysqli_query($condb, $sql_display);
-								while($row = mysqli_fetch_array($result_dispay)) { $DDAERAH = $row["NAMA_DAERAH"]; }
-								
-								$sql_display = "SELECT NAMA_KWSN FROM PERUMAHAN WHERE KOD_KWSN = '$PERUMAHAN'";
-								$result_dispay = mysqli_query($condb, $sql_display);
-								while($row = mysqli_fetch_array($result_dispay)) { $DPERUMAHAN = $row["NAMA_KWSN"]; }
-								
-								$sql_display = "SELECT JENIS FROM JENIS_ASNAF WHERE KOD_JENIS = '$JENIS'";
-								$result_dispay = mysqli_query($condb, $sql_display);
-								while($row = mysqli_fetch_array($result_dispay)) { $DJENIS = $row["JENIS"]; }
-								
-								// output student information
-								echo "<tbody>
-										<tr><td><b>Nama</b></td><td>$NAMA</td></tr>
-										<tr><td><b>No. Telefon</b></td><td>$TEL</td></tr>
-										<tr><td><b>Alamat</b></td><td>$JLN_1<br>$JLN_2</td></tr>
-										<tr><td><b>Poskod</b></td><td>$POSKOD</td></tr>
-										<tr><td><b>Kawasan Perumahan</b></td><td>$DPERUMAHAN</td></tr>
-										<tr><td><b>Bandar</b></td><td>$BANDAR</td></tr>
-										<tr><td><b>Daerah Kediaman</b></td><td>$DDAERAH</td></tr>
-										<tr><td><b>Negeri Kediaman</b></td><td>$DNEGERI</td></tr>
-										<tr><td><b>Pendapatan</b></td><td style='vertical-align:middle'>RM $PENDAPATAN</td></tr>
-										<tr><td><b>Lampiran Slip Pendapatan/Gaji</b></td><td><a href=\"bukti/$BUKTI\" target=\"_blank\"><button class=\"btn btn-info\">Lihat</button></a></td></tr>
-										<tr><td><b>Jenis Asnaf</b></td><td style='vertical-align:middle'>$DJENIS</td></tr>
-										<tr><td><b>Bank</b></td><td>$BANK</td>
-										<tr><td><b>Nombor Akaun</b></td><td>$NO_AKAUN</td>";
-								echo "</tbody></table>";
+						$ID		= request_ic($_GET, 'ID');
+						$row	= null;
 
-								if($D_BC == false)
-								{
-									echo "<tr><td align='center'><i> Tiada data untuk dipaparkan </i></td></tr></table>";
-								}
-							}
-							else
-							{
-								echo "<tr><td align='center'><i> Tiada data untuk dipaparkan </i></td></tr></table>";
-							}
+						if($ID !== null)
+						{
+							$result = db_query("SELECT C.*, N.NEGERI AS DNEGERI, D.NAMA_DAERAH AS DDAERAH, K.NAMA_KWSN AS DPERUMAHAN, J.JENIS AS DJENIS, B.NAMA_BANK
+								FROM CADANG_ASNAF C
+								LEFT JOIN NEGERI N ON N.KOD_NEGERI = C.NEGERI
+								LEFT JOIN DAERAH D ON D.KOD_DAERAH = C.DAERAH
+								LEFT JOIN PERUMAHAN K ON K.KOD_KWSN = C.PERUMAHAN
+								LEFT JOIN JENIS_ASNAF J ON J.KOD_JENIS = C.JENIS
+								LEFT JOIN BANK B ON B.KOD_BANK = C.BANK
+								WHERE C.NO_KP = ?", [$ID]);
+							$row = $result ? mysqli_fetch_assoc($result) : null;
+						}
+
+						if($row)
+						{
+							// The proof is served by bukti.php to logged-in users only (bukti/ is not public).
+							$lampiran = $row["BUKTI"] !== ''
+								? "<a href=\"bukti.php?ID=" . e($row["NO_KP"]) . "\" target=\"_blank\"><button class=\"btn btn-info\">Lihat</button></a>"
+								: "<i>Tiada</i>";
+
+							echo "<tbody>
+									<tr><td><b>Nama</b></td><td>" . e($row["NAMA"]) . "</td></tr>
+									<tr><td><b>No. Telefon</b></td><td>" . e($row["TEL"]) . "</td></tr>
+									<tr><td><b>Alamat</b></td><td>" . e($row["JLN_1"]) . "<br>" . e($row["JLN_2"]) . "</td></tr>
+									<tr><td><b>Poskod</b></td><td>" . e($row["POSKOD"]) . "</td></tr>
+									<tr><td><b>Kawasan Perumahan</b></td><td>" . e($row["DPERUMAHAN"]) . "</td></tr>
+									<tr><td><b>Bandar</b></td><td>" . e($row["BANDAR"]) . "</td></tr>
+									<tr><td><b>Daerah Kediaman</b></td><td>" . e($row["DDAERAH"]) . "</td></tr>
+									<tr><td><b>Negeri Kediaman</b></td><td>" . e($row["DNEGERI"]) . "</td></tr>
+									<tr><td><b>Pendapatan</b></td><td style='vertical-align:middle'>RM " . e($row["PENDAPATAN"]) . "</td></tr>
+									<tr><td><b>Lampiran Slip Pendapatan/Gaji</b></td><td>" . $lampiran . "</td></tr>
+									<tr><td><b>Jenis Asnaf</b></td><td style='vertical-align:middle'>" . e($row["DJENIS"]) . "</td></tr>
+									<tr><td><b>Bank</b></td><td>" . e($row["NAMA_BANK"] ?? $row["BANK"]) . "</td></tr>
+									<tr><td><b>Nombor Akaun</b></td><td>" . e($row["NO_AKAUN"]) . "</td></tr>";
+							echo "</tbody></table>";
 						}
 						else
 						{

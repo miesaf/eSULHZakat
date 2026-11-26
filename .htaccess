@@ -1,0 +1,11 @@
+# e-Asnaf Transfer runs on PHP 8.5, whatever the PHP version of the rest of the site.
+<FilesMatch "\.php$">
+	SetHandler application/x-lsphp85
+</FilesMatch>
+
+Options -Indexes
+
+# Credentials, logs, SQL files and notes are never served.
+<FilesMatch "^(config(\.example)?\.php|connectDB\.php|error_log|.*\.sql|.*\.md|LICENSE.*)$">
+	Require all denied
+</FilesMatch>

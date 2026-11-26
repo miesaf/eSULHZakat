@@ -1,188 +1,80 @@
+<?php ob_start(); ?>
 <html>
 <head>
 	<?php
-		include('connectDB.php');
+		require_once __DIR__ . '/connectDB.php';
 		
 		if(isset($_POST['DAFTAR']))
 		{
-			// Declaring null value for optional variables
-			$JLN_2		= null;
+			$TARMOH	= date("Y-m-d H:i:s");
+			$TAHUN	= (int) date("Y");
 			
-			// Sijil ID Generator
-			$h = "8";	// to rematch time with Malaysian GMT +8 time (please truncate the +/- sign)
-			$hm = $h * 60; 
-			$ms = $hm * 60;
-			$TARMOH	= gmdate("Y-m-d H:i:s", time()+($ms));
-			$HARI	= gmdate("w", time()+($ms));
-			$BULAN	= gmdate("n", time()+($ms));
-			$TARIKH	= gmdate("d", time()+($ms));
-			$TAHUN	= gmdate("Y", time()+($ms));
-			$MASA = gmdate("g:i:s a", time()+($ms));	// use (-) for -ve GMT and (+) for +ve GMT
-						/* 	-----------------------
-							Timestamp Configuration
-							-----------------------
-							Y - Full year
-							m - month with leading zero
-							d - date with leading zero
-							H - 24-hour format hour
-							i - minute with leading zero
-							s - second with leading zero
-							
-							# Please reconfigure server time to:
-							timezone - Asia/Kuala_Lumour
-							latitude = 3.133333
-							longitude = 101.683333
-							
-							#date() - will fetch server date
-							#gmdate() - will fetch GMT 0:00 date
-						*/
-			//Library Hari
-			$DHARI[0]	= "Ahad";
-			$DHARI[1]	= "Isnin";
-			$DHARI[2]	= "Selasa";
-			$DHARI[3]	= "Rabu";
-			$DHARI[4]	= "Khamis";
-			$DHARI[5]	= "Jumaat";
-			$DHARI[6]	= "Sabtu";
+			[$f, $ralat]	= asnaf_fields($_POST);
+			$KATA_LALUAN	= is_string($_POST['KATA_LALUAN'] ?? null) ? $_POST['KATA_LALUAN'] : '';
+			$RUMAH			= request_text($_POST, 'RUMAH');
 			
-			//Library Bulan
-			$DBULAN[1]	= "Januari";
-			$DBULAN[2]	= "Februari";
-			$DBULAN[3]	= "Mac";
-			$DBULAN[4]	= "April";
-			$DBULAN[5]	= "Mei";
-			$DBULAN[6]	= "Jun";
-			$DBULAN[7]	= "Julai";
-			$DBULAN[8]	= "Ogos";
-			$DBULAN[9]	= "September";
-			$DBULAN[10]	= "Oktober";
-			$DBULAN[11]	= "November";
-			$DBULAN[12]	= "Disember";
-			
-			$DTARIKH	= "$DHARI[$HARI], $TARIKH $DBULAN[$BULAN] $TAHUN $MASA";
-			
-			// End of Sijil ID Generator
-			
-			// Variables from pendaftaran.php
-			$NAMA			= mysqli_real_escape_string($condb, $_POST['NAMA']);
-			$NO_KP			= mysqli_real_escape_string($condb, $_POST['NO_KP']);
-			$KATA_LALUAN	= mysqli_real_escape_string($condb, $_POST['KATA_LALUAN']);
-			$TEL			= mysqli_real_escape_string($condb, $_POST['TEL']);
-			$JLN_1			= mysqli_real_escape_string($condb, $_POST['JLN_1']);
-			$JLN_2			= mysqli_real_escape_string($condb, $_POST['JLN_2']);
-			$POSKOD			= mysqli_real_escape_string($condb, $_POST['POSKOD']);
-			$PERUMAHAN		= mysqli_real_escape_string($condb, $_POST['PERUMAHAN']);
-			$BANDAR			= mysqli_real_escape_string($condb, $_POST['BANDAR']);
-			$DAERAH			= mysqli_real_escape_string($condb, $_POST['DAERAH']);
-			$NEGERI			= mysqli_real_escape_string($condb, $_POST['NEGERI']);
-			$PENDAPATAN		= mysqli_real_escape_string($condb, $_POST['PENDAPATAN']);
-			$BANK			= mysqli_real_escape_string($condb, $_POST['BANK']);
-			$NO_AKAUN		= mysqli_real_escape_string($condb, $_POST['NO_AKAUN']);
-			
-			$RUMAH			= mysqli_real_escape_string($condb, $_POST['RUMAH']);
-			$BINI_B			= mysqli_real_escape_string($condb, $_POST['BINI_B']);
-			$BINI_M			= mysqli_real_escape_string($condb, $_POST['BINI_M']);
-			$DEW_B			= mysqli_real_escape_string($condb, $_POST['DEW_B']);
-			$DEW_M			= mysqli_real_escape_string($condb, $_POST['DEW_M']);
-			$ANAK_I			= mysqli_real_escape_string($condb, $_POST['ANAK_I']);
-			$ANAK_M			= mysqli_real_escape_string($condb, $_POST['ANAK_M']);
-			$ANAK_R			= mysqli_real_escape_string($condb, $_POST['ANAK_R']);
-			$CACAT			= mysqli_real_escape_string($condb, $_POST['CACAT']);
-			$BAYI			= mysqli_real_escape_string($condb, $_POST['BAYI']);
-			$KRONIK			= mysqli_real_escape_string($condb, $_POST['KRONIK']);
-			
-			// Penentuan Had Kifayah
-			$HK_RUMAH = 0;
-			
-			if($RUMAH == 0)
+			// Household: whole numbers of at least 0.
+			$bil = [];
+			foreach (['BINI_B', 'BINI_M', 'DEW_B', 'DEW_M', 'ANAK_I', 'ANAK_R', 'ANAK_M', 'CACAT', 'BAYI', 'KRONIK'] as $k)
 			{
-				$HK_RUMAH	= 570;
-			}
-			elseif($RUMAH == 1)
-			{
-				$HK_RUMAH = 895;
+				$bil[$k] = min(99, request_count($_POST, $k));
 			}
 			
-			$HAD_KIFAYAH = $HK_RUMAH + ($BINI_B * 415) + ($BINI_M * 190) + ($DEW_B * 415) + ($DEW_M * 190) + ($ANAK_I * 235) + ($ANAK_R * 185) + ($ANAK_M * 120) + ($CACAT * 200) + ($BAYI * 190) + ($KRONIK * 200);
-			
-			$KELAS_HK	= 0 - ($HAD_KIFAYAH / 2);
-			$KIF		= $PENDAPATAN - $HAD_KIFAYAH;
-			if($KIF < 0)
+			if($ralat === null && $KATA_LALUAN === '')
 			{
-				if($KIF < $KELAS_HK)
-				{
-					$JENIS	= "FKIR";
-				}
-				else
-				{
-					$JENIS	= "MSKN";
-				}
+				$ralat = "Sila isi kata laluan.";
+			}
+			if($ralat === null && $RUMAH !== '0' && $RUMAH !== '1')
+			{
+				$ralat = "Sila pilih jenis pemilikan rumah.";
+			}
+			if($ralat === null && db_value("SELECT COUNT(*) FROM ASNAF WHERE NO_KP = ?", [$f['NO_KP']]) !== "0")
+			{
+				$ralat = "Nombor K/P ini telah didaftarkan.";
+			}
+			
+			if($ralat !== null)
+			{
+				js_alert("Pendaftaran gagal!\n" . $ralat);
 			}
 			else
 			{
-				$JENIS	= "FSBL";
-			}
-			
-			$KIFAYAH_BAKI	= $HAD_KIFAYAH;
-			
-			//SQL query command
-			$sql="INSERT INTO ASNAF (NAMA, NO_KP, KATA_LALUAN, TEL, JLN_1, JLN_2, POSKOD, PERUMAHAN, BANDAR, DAERAH, NEGERI, PENDAPATAN, JENIS, BANK, NO_AKAUN) VALUES (\"$NAMA\", $NO_KP, \"$KATA_LALUAN\", \"$TEL\", \"$JLN_1\", \"$JLN_2\", \"$POSKOD\", \"$PERUMAHAN\", \"$BANDAR\", \"$DAERAH\", \"$NEGERI\", \"$PENDAPATAN\", \"$JENIS\", \"$BANK\", \"$NO_AKAUN\");";
-			
-			// execute query
-			$exe_sql = mysqli_query($condb, $sql);
-			
-			// confirming the record is added
-			if ($exe_sql)
-			{
-				echo '<html>
-						<head>
-							<script>
-								window.alert("Pendaftaran berjaya!\nRekod telah di simpan ke dalam pangkalan data ASNAF.");
-							</script>
-						</head>
-					</html>';
-					
-				$sql2="INSERT INTO PERMOHONAN (PEMOHON, NAMA, TAHUN, TARIKH_MOHON, NEGERI, DAERAH, PERUMAHAN, PENDAPATAN, JENIS, KIFAYAH_BAKI, RUMAH, BINI_B, BINI_M, DEW_B, DEW_M, ANAK_I, ANAK_R, ANAK_M, CACAT, BAYI, KRONIK) VALUES (\"$NO_KP\", \"$NAMA\", $TAHUN, \"$TARMOH\", \"$NEGERI\", \"$DAERAH\", \"$PERUMAHAN\", $PENDAPATAN, \"$JENIS\", $KIFAYAH_BAKI, $RUMAH, $BINI_B, $BINI_M, $DEW_B, $DEW_M, $ANAK_I, $ANAK_R, $ANAK_M, $CACAT, $BAYI, $KRONIK)";
+				// Penentuan Had Kifayah
+				$HK_RUMAH = $RUMAH === '1' ? 895 : 570;
 				
-				// execute query
-				$exe_sql2 = mysqli_query($condb, $sql2);
+				$HAD_KIFAYAH = $HK_RUMAH + ($bil['BINI_B'] * 415) + ($bil['BINI_M'] * 190) + ($bil['DEW_B'] * 415) + ($bil['DEW_M'] * 190) + ($bil['ANAK_I'] * 235) + ($bil['ANAK_R'] * 185) + ($bil['ANAK_M'] * 120) + ($bil['CACAT'] * 200) + ($bil['BAYI'] * 190) + ($bil['KRONIK'] * 200);
 				
-				// confirming the record is added
-				if($exe_sql2)
+				$KELAS_HK	= 0 - ($HAD_KIFAYAH / 2);
+				$KIF		= $f['PENDAPATAN'] - $HAD_KIFAYAH;
+				if($KIF < 0)
 				{
-					echo '<html>
-						<head>
-							<script>
-								window.alert("Pendaftaran berjaya!\nRekod telah di simpan ke dalam pangkalan data PERMOHONAN.");
-							</script>
-							<meta http-equiv="refresh" content="0; url=input.php" />
-						</head>
-					</html>';
+					$JENIS = $KIF < $KELAS_HK ? "FKIR" : "MSKN";
 				}
 				else
 				{
-					echo "SQL insert statement failed.<br>";
-					echo '<html>
-							<head>
-								<script>
-									window.alert("Pendaftaran gagal!\nRekod tidak di simpan ke dalam pangkalan data PERMOHONAN!");
-									window.history.go(-1);
-								</script>
-							</head>
-						</html>';
+					$JENIS	= "FSBL";
 				}
-			}
-			else
-			{
-				echo "SQL insert statement failed.<br>";
-				echo '<html>
-						<head>
-							<script>
-								window.alert("Pendaftaran gagal!\nRekod tidak di simpan ke dalam pangkalan data ASNAF!");
-								window.history.go(-1);
-							</script>
-						</head>
-					</html>';
+				
+				$KIFAYAH_BAKI	= $HAD_KIFAYAH;
+				
+				// The asnaf and the application are saved together, or neither.
+				mysqli_begin_transaction($condb);
+				$ok = db_query("INSERT INTO ASNAF (NAMA, NO_KP, KATA_LALUAN, TEL, JLN_1, JLN_2, POSKOD, PERUMAHAN, BANDAR, DAERAH, NEGERI, PENDAPATAN, JENIS, BANK, NO_AKAUN) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+					[$f['NAMA'], $f['NO_KP'], password_hash($KATA_LALUAN, PASSWORD_DEFAULT), $f['TEL'], $f['JLN_1'], $f['JLN_2'], $f['POSKOD'], $f['PERUMAHAN'], $f['BANDAR'], $f['DAERAH'], $f['NEGERI'], $f['PENDAPATAN'], $JENIS, $f['BANK'], $f['NO_AKAUN']]);
+				$ok = $ok && db_query("INSERT INTO PERMOHONAN (PEMOHON, NAMA, TAHUN, TARIKH_MOHON, NEGERI, DAERAH, PERUMAHAN, PENDAPATAN, JENIS, KIFAYAH_BAKI, KIFAYAH_KREDIT, LOG_BAYARAN, RUMAH, BINI_B, BINI_M, DEW_B, DEW_M, ANAK_I, ANAK_R, ANAK_M, CACAT, BAYI, KRONIK) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+					[$f['NO_KP'], $f['NAMA'], $TAHUN, $TARMOH, $f['NEGERI'], $f['DAERAH'], $f['PERUMAHAN'], $f['PENDAPATAN'], $JENIS, $KIFAYAH_BAKI, (int) $RUMAH,
+					$bil['BINI_B'], $bil['BINI_M'], $bil['DEW_B'], $bil['DEW_M'], $bil['ANAK_I'], $bil['ANAK_R'], $bil['ANAK_M'], $bil['CACAT'], $bil['BAYI'], $bil['KRONIK']]);
+				
+				if($ok)
+				{
+					mysqli_commit($condb);
+					js_alert("Pendaftaran berjaya!\nRekod telah di simpan ke dalam pangkalan data ASNAF dan PERMOHONAN.", "input.php");
+				}
+				else
+				{
+					mysqli_rollback($condb);
+					js_alert("Pendaftaran gagal!\nRekod tidak di simpan ke dalam pangkalan data ASNAF dan PERMOHONAN!");
+				}
 			}
 		}
 	?>
@@ -320,12 +212,12 @@
 													<option value=""> Sila pilih </option>
 													<?php
 													$sql_choose = "SELECT KOD_DAERAH, KOD_KWSN, NAMA_KWSN FROM PERUMAHAN ORDER BY NAMA_KWSN";
-													$result_choose = mysqli_query($condb, $sql_choose);
-													while ($row = mysqli_fetch_array($result_choose))
+													$result_choose = db_query($sql_choose);
+													while ($row = mysqli_fetch_assoc($result_choose))
 													{
-														$KWSN1 = $row["KOD_DAERAH"];
-														$KWSN2 = $row["KOD_KWSN"];
-														$KWSN3 = $row["NAMA_KWSN"];
+														$KWSN1 = e($row["KOD_DAERAH"]);
+														$KWSN2 = e($row["KOD_KWSN"]);
+														$KWSN3 = e($row["NAMA_KWSN"]);
 														
 														echo "<option class=\"$KWSN1\" value=\"$KWSN2\"> $KWSN3 </option>";
 													} ?>
@@ -337,12 +229,12 @@
 													<option value=""> Sila pilih </option>
 													<?php
 													$sql_choose = "SELECT KOD_NEGERI, KOD_DAERAH, NAMA_DAERAH FROM DAERAH ORDER BY NAMA_DAERAH";
-													$result_choose = mysqli_query($condb, $sql_choose);
-													while ($row = mysqli_fetch_array($result_choose))
+													$result_choose = db_query($sql_choose);
+													while ($row = mysqli_fetch_assoc($result_choose))
 													{
-														$DAE1 = $row["KOD_NEGERI"];
-														$DAE2 = $row["KOD_DAERAH"];
-														$DAE3 = $row["NAMA_DAERAH"];
+														$DAE1 = e($row["KOD_NEGERI"]);
+														$DAE2 = e($row["KOD_DAERAH"]);
+														$DAE3 = e($row["NAMA_DAERAH"]);
 														
 														echo "<option class=\"$DAE1\" value=\"$DAE2\"> $DAE3 </option>";
 													} ?>
@@ -353,12 +245,12 @@
 													<option disabled> </option>
 													<?php
 													$sql_choose = "SELECT KOD_NEGERI, NEGERI, P_ZAKAT FROM NEGERI ORDER BY P_ZAKAT";
-													$result_choose = mysqli_query($condb, $sql_choose);
-													while ($row = mysqli_fetch_array($result_choose))
+													$result_choose = db_query($sql_choose);
+													while ($row = mysqli_fetch_assoc($result_choose))
 													{
-														$NEGRI1 = $row["KOD_NEGERI"];
-														$NEGRI2 = $row["NEGERI"];
-														$NEGRI3 = $row["P_ZAKAT"];
+														$NEGRI1 = e($row["KOD_NEGERI"]);
+														$NEGRI2 = e($row["NEGERI"]);
+														$NEGRI3 = e($row["P_ZAKAT"]);
 														
 														echo "<option value=\"$NEGRI1\"> $NEGRI3 </option>";
 													} ?>
@@ -425,11 +317,11 @@
 												<option disabled> </option>
 												<?php
 												$sql_choose = "SELECT * FROM BANK ORDER BY NAMA_BANK";
-												$result_choose = mysqli_query($condb, $sql_choose);
-												while ($row = mysqli_fetch_array($result_choose))
+												$result_choose = db_query($sql_choose);
+												while ($row = mysqli_fetch_assoc($result_choose))
 												{
-													$BANK1 = $row["KOD_BANK"];
-													$BANK2 = $row["NAMA_BANK"];
+													$BANK1 = e($row["KOD_BANK"]);
+													$BANK2 = e($row["NAMA_BANK"]);
 													echo '<option value="' . $BANK1 . '"> ' . $BANK2 . '</option>';
 												} ?>
 											</select>
